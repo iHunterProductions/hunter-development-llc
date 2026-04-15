@@ -33,7 +33,6 @@
       text-align: center;
     }
 
-    /* 🎮 BASE BUTTON */
     button {
       width: 95%;
       padding: 10px;
@@ -43,22 +42,21 @@
       font-weight: bold;
       cursor: pointer;
       border-radius: 6px;
-      transition: all 0.25s ease;
+      transition: 0.25s ease;
     }
 
-    /* 🔥 HOVER EFFECT (CYAN → DARK BLUE GLOW) */
     button:hover {
       transform: translateY(-3px) scale(1.03);
       box-shadow:
         0 0 10px #001a33,
         0 0 20px #00264d,
-        0 0 35px #003366,
-        0 0 50px #004080;
+        0 0 35px #003366;
     }
 
-    #hub { display: none; }
+    #hub {
+      display: none;
+    }
 
-    /* 👑 ADMIN PANEL LAYOUT */
     #adminPanel {
       display: none;
       margin-top: 10px;
@@ -67,24 +65,24 @@
     }
 
     .adminList {
-      max-height: 120px;
+      max-height: 140px;
       overflow-y: auto;
       border: 1px solid #00ffff;
-      margin: 10px 0;
+      margin-top: 10px;
       padding: 5px;
       text-align: left;
       font-size: 12px;
     }
 
-    .adminRow {
+    .row {
       display: flex;
       justify-content: space-between;
-      margin: 4px 0;
+      margin: 5px 0;
     }
 
     .miniBtn {
       width: auto;
-      padding: 5px 8px;
+      padding: 4px 8px;
       font-size: 11px;
       margin-left: 5px;
     }
@@ -116,11 +114,11 @@
   <button onclick="location.href='games/tetris/'">Tetris</button>
   <button onclick="location.href='games/scramble/'">Scramble</button>
 
-  <button id="adminBtn" onclick="toggleAdmin()">
+  <button id="adminBtn" onclick="toggleAdmin()" style="display:none;">
     Admin Panel
   </button>
 
-  <!-- 👑 ADMIN PANEL -->
+  <!-- ADMIN PANEL -->
   <div id="adminPanel">
     <h4>Users</h4>
     <div id="userList" class="adminList"></div>
@@ -131,6 +129,11 @@
 
 <script>
 const ADMIN = "iHunterDoesProductions";
+
+/* CHECK ADMIN */
+function isAdmin(){
+  return localStorage.getItem("currentUser") === ADMIN;
+}
 
 /* SIGN UP */
 function signUp(){
@@ -174,31 +177,36 @@ function signIn(){
   loadHub(user);
 }
 
-/* HUB */
+/* LOAD HUB */
 function loadHub(user){
   document.getElementById("login").style.display = "none";
   document.getElementById("hub").style.display = "block";
 
   document.getElementById("welcome").innerText = `Welcome, ${user}!`;
 
-  if(user === ADMIN){
+  if(isAdmin()){
     document.getElementById("adminBtn").style.display = "block";
   }
 }
 
-/* ADMIN TOGGLE */
+/* TOGGLE ADMIN */
 function toggleAdmin(){
+  if(!isAdmin()){
+    alert("Access denied.");
+    return;
+  }
+
   const panel = document.getElementById("adminPanel");
 
+  panel.style.display =
+    panel.style.display === "block" ? "none" : "block";
+
   if(panel.style.display === "block"){
-    panel.style.display = "none";
-  } else {
-    panel.style.display = "block";
     loadUsers();
   }
 }
 
-/* LOAD USERS (CLEAN LIST UI) */
+/* LOAD USERS */
 function loadUsers(){
   let users = JSON.parse(localStorage.getItem("users") || "[]");
   const list = document.getElementById("userList");
@@ -207,7 +215,7 @@ function loadUsers(){
 
   users.forEach(u => {
     const row = document.createElement("div");
-    row.className = "adminRow";
+    row.className = "row";
 
     row.innerHTML = `
       <span>${u}</span>
@@ -223,13 +231,21 @@ function loadUsers(){
 
 /* ADMIN ACTIONS */
 function banUser(u){
+  if(!isAdmin()) return;
   localStorage.setItem("banned_" + u, "true");
   alert(u + " banned");
 }
 
 function muteUser(u){
+  if(!isAdmin()) return;
   localStorage.setItem("muted_" + u, "true");
   alert(u + " muted");
+}
+
+/* LOGOUT */
+function logout(){
+  localStorage.removeItem("currentUser");
+  location.reload();
 }
 
 /* AUTO LOGIN */
@@ -237,12 +253,6 @@ window.onload = () => {
   const saved = localStorage.getItem("currentUser");
   if(saved) loadHub(saved);
 };
-
-/* LOGOUT */
-function logout(){
-  localStorage.removeItem("currentUser");
-  location.reload();
-}
 </script>
 
 </body>
