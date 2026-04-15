@@ -21,21 +21,13 @@
       padding: 20px;
       border-radius: 12px;
       text-align: center;
-    }
-
-    #messages {
-      height: 240px;
-      overflow-y: auto;
-      border: 1px solid #00ffff;
-      margin: 10px 0;
-      padding: 10px;
-      text-align: left;
-      background: rgba(0,255,255,0.05);
+      box-shadow: 0 0 20px #00ffff;
     }
 
     input {
       width: 90%;
       padding: 10px;
+      margin: 6px 0;
       border: none;
       border-radius: 6px;
       text-align: center;
@@ -52,8 +44,28 @@
       margin-top: 8px;
     }
 
-    .msg { margin: 5px 0; }
-    .name { color: #ff00ff; font-weight: bold; }
+    #chatUI {
+      display: none;
+    }
+
+    #messages {
+      height: 240px;
+      overflow-y: auto;
+      border: 1px solid #00ffff;
+      margin: 10px 0;
+      padding: 10px;
+      text-align: left;
+      background: rgba(0,255,255,0.05);
+    }
+
+    .msg {
+      margin: 5px 0;
+    }
+
+    .name {
+      color: #ff00ff;
+      font-weight: bold;
+    }
 
     #status {
       color: red;
@@ -64,7 +76,16 @@
 
 <body>
 
-<div class="box">
+<!-- 🔐 PASSWORD GATE -->
+<div id="gate" class="box">
+  <h2>Chat.Me 2</h2>
+
+  <input id="chatPass" type="password" placeholder="Enter Chat Password">
+  <button onclick="enterChat()">Enter</button>
+</div>
+
+<!-- 💬 CHAT UI -->
+<div id="chatUI" class="box">
   <h2>Chat.Me 2</h2>
 
   <h3 id="welcome"></h3>
@@ -93,27 +114,51 @@ if(localStorage.getItem("banned_" + username) === "true"){
   window.location.href = "index.html";
 }
 
-document.getElementById("welcome").innerText = `Welcome, ${username}!`;
+const CHAT_PASSWORD = "0708";
 
-if(localStorage.getItem("muted_" + username) === "true"){
-  document.getElementById("status").innerText = "⚠ YOU ARE MUTED";
+let channel;
+
+/* 🔐 PASSWORD CHECK */
+function enterChat(){
+  const pass = document.getElementById("chatPass").value;
+
+  if(pass !== CHAT_PASSWORD){
+    alert("Wrong password");
+    return;
+  }
+
+  document.getElementById("gate").style.display = "none";
+  document.getElementById("chatUI").style.display = "block";
+
+  startChat();
 }
 
-/* ABLY */
-const ably = new Ably.Realtime({
-  key: "c-wtfg.-Nr1zw:P37xNKXR2B4E-KOPhClqoUsFYS51FUiFroqUPVr3DZM"
-});
+/* 💬 INIT CHAT */
+function startChat(){
+  document.getElementById("welcome").innerText =
+    `Welcome, ${username}!`;
 
-const channel = ably.channels.get("chat-me-2");
+  if(localStorage.getItem("muted_" + username) === "true"){
+    document.getElementById("status").innerText = "⚠ YOU ARE MUTED";
+  }
 
-channel.subscribe("message", msg => {
-  const div = document.createElement("div");
-  div.className = "msg";
-  div.innerHTML = `<span class="name">${msg.data.name}:</span> ${msg.data.text}`;
-  document.getElementById("messages").appendChild(div);
-});
+  const ably = new Ably.Realtime({
+    key: "c-wtfg.-Nr1zw:P37xNKXR2B4E-KOPhClqoUsFYS51FUiFroqUPVr3DZM"
+  });
 
-/* SEND */
+  channel = ably.channels.get("chat-me-2");
+
+  channel.subscribe("message", msg => {
+    const div = document.createElement("div");
+    div.className = "msg";
+    div.innerHTML =
+      `<span class="name">${msg.data.name}:</span> ${msg.data.text}`;
+
+    document.getElementById("messages").appendChild(div);
+  });
+}
+
+/* 🚫 SEND MESSAGE */
 function sendMsg(){
   if(localStorage.getItem("muted_" + username) === "true"){
     alert("You are muted.");
@@ -133,7 +178,7 @@ function sendMsg(){
   input.value = "";
 }
 
-/* HOME */
+/* 🏠 HOME */
 function goHome(){
   window.location.href = "index.html";
 }
