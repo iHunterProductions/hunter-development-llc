@@ -42,7 +42,6 @@
       font-weight: bold;
       cursor: pointer;
       border-radius: 6px;
-      transition: 0.2s;
     }
 
     button:hover {
@@ -50,15 +49,7 @@
       transform: scale(1.03);
     }
 
-    #hub {
-      display: none;
-    }
-
-    .gameBtn {
-      display: block;
-      width: 260px;
-      margin: 10px auto;
-    }
+    #hub { display: none; }
   </style>
 </head>
 
@@ -79,20 +70,23 @@
 <div id="hub" class="box">
   <h2 id="welcome"></h2>
 
-  <!-- TERMS BACK AT TOP -->
   <button onclick="alert('Rules and Terms of Use: To be determined')">
     Terms of Use
   </button>
 
-  <button class="gameBtn" onclick="location.href='chat.html'">Chat.Me 2</button>
-  <button class="gameBtn" onclick="location.href='games/tetris/'">Tetris</button>
-  <button class="gameBtn" onclick="location.href='games/scramble/'">Scramble</button>
+  <button onclick="location.href='chat.html'">Chat.Me 2</button>
+  <button onclick="location.href='games/tetris/'">Tetris</button>
+  <button onclick="location.href='games/scramble/'">Scramble</button>
+
+  <button id="adminBtn" style="display:none;" onclick="openAdmin()">
+    Users (Admin Panel)
+  </button>
 
   <button onclick="logout()">Logout</button>
 </div>
 
 <script>
-let currentUser;
+const ADMIN = "iHunterDoesProductions";
 
 /* SIGN UP */
 function signUp(){
@@ -110,6 +104,13 @@ function signUp(){
   }
 
   localStorage.setItem("user_" + user, pass);
+
+  let users = JSON.parse(localStorage.getItem("users") || "[]");
+  if(!users.includes(user)){
+    users.push(user);
+    localStorage.setItem("users", JSON.stringify(users));
+  }
+
   localStorage.setItem("currentUser", user);
 
   loadHub(user);
@@ -119,6 +120,11 @@ function signUp(){
 function signIn(){
   const user = document.getElementById("username").value.trim();
   const pass = document.getElementById("password").value;
+
+  if(localStorage.getItem("banned_" + user) === "true"){
+    alert("You are banned from this arcade.");
+    return;
+  }
 
   const saved = localStorage.getItem("user_" + user);
 
@@ -139,28 +145,63 @@ function signIn(){
 
 /* LOAD HUB */
 function loadHub(user){
-  currentUser = user;
-
   document.getElementById("login").style.display = "none";
   document.getElementById("hub").style.display = "block";
 
   document.getElementById("welcome").innerText =
     `Welcome, ${user}!`;
+
+  if(user === ADMIN){
+    document.getElementById("adminBtn").style.display = "block";
+  }
 }
 
 /* AUTO LOGIN */
 window.onload = () => {
   const saved = localStorage.getItem("currentUser");
-
-  if(saved){
-    loadHub(saved);
-  }
+  if(saved) loadHub(saved);
 };
 
 /* LOGOUT */
 function logout(){
   localStorage.removeItem("currentUser");
   location.reload();
+}
+
+/* ADMIN PANEL */
+function openAdmin(){
+  let users = JSON.parse(localStorage.getItem("users") || "[]");
+
+  let list = users.join("\n");
+
+  let action = prompt(
+    "USERS:\n\n" + list +
+    "\n\nCommands:\nban:username\nmute:username\nunban:username\nunmute:username"
+  );
+
+  if(!action) return;
+
+  let [cmd, target] = action.split(":");
+
+  if(cmd === "ban"){
+    localStorage.setItem("banned_" + target, "true");
+    alert(target + " banned");
+  }
+
+  if(cmd === "unban"){
+    localStorage.removeItem("banned_" + target);
+    alert(target + " unbanned");
+  }
+
+  if(cmd === "mute"){
+    localStorage.setItem("muted_" + target, "true");
+    alert(target + " muted");
+  }
+
+  if(cmd === "unmute"){
+    localStorage.removeItem("muted_" + target);
+    alert(target + " unmuted");
+  }
 }
 </script>
 
