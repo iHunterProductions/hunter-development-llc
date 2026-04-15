@@ -7,19 +7,18 @@
     html, body {
       margin: 0;
       padding: 0;
-      overflow: hidden; /* prevents any scroll movement */
+      overflow: hidden;
       background: radial-gradient(circle, #020202, #000);
       font-family: Arial;
       color: #00ffff;
     }
 
     /* =========================
-       ULTRA FIXED BACK BUTTON
-       (always pinned to viewport)
+       BACK BUTTON (BOTTOM LEFT)
     ========================= */
     .back {
       position: fixed;
-      top: 12px;
+      bottom: 12px;
       left: 12px;
       z-index: 999999;
 
@@ -36,7 +35,6 @@
       user-select: none;
     }
 
-    /* CENTER GAME ONLY (NO FLEX ISSUES) */
     .wrap {
       position: absolute;
       top: 50%;
@@ -95,7 +93,6 @@
 
 <body>
 
-<!-- ALWAYS ON TOP LAYER -->
 <button class="back" onclick="location.href='index.html'">⬅ Back</button>
 
 <div class="pauseText" id="pauseText">PAUSED</div>
@@ -124,7 +121,7 @@
 <script>
 window.addEventListener("keydown", function(e){
   if(["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"," "].includes(e.key)){
-    e.preventDefault(); // stops page movement completely
+    e.preventDefault();
   }
 });
 
@@ -183,6 +180,7 @@ function randomPiece(){
 let current = randomPiece();
 let next = randomPiece();
 
+/* DRAW */
 function drawBoard(){
   ctx.fillStyle = "#050505";
   ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -216,6 +214,7 @@ function drawPiece(p, c){
   c.shadowBlur = 0;
 }
 
+/* COLLISION */
 function collide(p){
   for(let y=0;y<p.shape.length;y++){
     for(let x=0;x<p.shape[y].length;x++){
@@ -231,6 +230,7 @@ function collide(p){
   return false;
 }
 
+/* MERGE */
 function merge(){
   current.shape.forEach((r,y)=>{
     r.forEach((v,x)=>{
@@ -241,6 +241,7 @@ function merge(){
   });
 }
 
+/* CLEAR */
 function clearLines(){
   for(let y=ROWS-1;y>=0;y--){
     if(board[y].every(c=>c)){
@@ -259,6 +260,7 @@ function clearLines(){
   }
 }
 
+/* GAME OVER */
 function gameOver(){
   if(gameOverFlag) return;
 
@@ -270,6 +272,7 @@ function gameOver(){
   },50);
 }
 
+/* DROP */
 function drop(){
   if(paused || gameOverFlag) return;
 
@@ -292,12 +295,14 @@ function drop(){
   dropCounter = 0;
 }
 
+/* PAUSE */
 function togglePause(){
   paused = !paused;
   document.getElementById("pauseText").style.display =
     paused ? "block" : "none";
 }
 
+/* INPUT */
 document.addEventListener("keydown",e=>{
   if(paused || gameOverFlag) return;
 
@@ -315,6 +320,7 @@ document.addEventListener("keydown",e=>{
   }
 });
 
+/* LOOP */
 function loop(time=0){
   if(gameOverFlag) return;
 
