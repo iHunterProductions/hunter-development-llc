@@ -2,44 +2,56 @@
 <html>
 <head>
   <title>Hunter Development LLC</title>
+
   <style>
     body {
+      margin: 0;
+      background: #000;
+      color: #00ffff;
       font-family: Arial;
-      background: #111;
-      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .menu {
       text-align: center;
-      padding-top: 80px;
+      border: 2px solid #00ffff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px #00ffff;
     }
 
     button {
-      padding: 15px 25px;
-      margin: 10px;
-      font-size: 18px;
+      display: block;
+      width: 220px;
+      margin: 10px auto;
+      padding: 12px;
       border: none;
-      border-radius: 10px;
+      background: #00ffff;
+      color: black;
+      font-weight: bold;
+      border-radius: 8px;
       cursor: pointer;
     }
-
-    .play { background: #4CAF50; }
-    .terms { background: #ff9800; }
-    .chat { background: #2196F3; }
   </style>
 </head>
+
 <body>
 
-<h1>Hunter Development LLC</h1>
+<div class="menu">
+  <h1>Hunter Development LLC</h1>
 
-<button class="play" onclick="location.href='tetris.html'">
-  Play Tetris
-</button>
+  <button onclick="openChat()">Chat.Me 2</button>
+  <button onclick="alert('Removed / Coming Soon')">Games (Removed)</button>
+</div>
 
-<button class="terms" onclick="location.href='terms.html'">
-  Terms
-</button>
-
-<button class="chat" onclick="location.href='chat.html'">
-  Chat.Me 2
-</button>
+<script>
+function openChat(){
+  window.location.href = "chat.html";
+}
+</script>
 
 </body>
 </html>
