@@ -15,7 +15,6 @@
       color: #00ffff;
     }
 
-    /* FIXED BACK BUTTON (FORCED TOP LEFT) */
     .back {
       position: fixed;
       top: 10px;
@@ -90,7 +89,6 @@
     <h2>Next</h2>
     <canvas id="next" width="120" height="120"></canvas>
 
-    <button onclick="togglePause()">Pause</button>
     <button onclick="location.reload()">Restart</button>
   </div>
 </div>
@@ -108,7 +106,6 @@ const SIZE = 30;
 
 let board = Array.from({length: ROWS}, () => Array(COLS).fill(0));
 
-/* SHAPES ONLY (NO GLOBAL COLOR HERE) */
 const pieces = [
   [[1,1,1,1]],
   [[1,1],[1,1]],
@@ -119,7 +116,6 @@ const pieces = [
   [[0,0,1],[1,1,1]]
 ];
 
-/* INDIVIDUAL COLORS PER PIECE (FIXED) */
 const colors = [
   "#00ffff",
   "#ffff00",
@@ -137,9 +133,10 @@ let dropCounter = 0;
 let dropInterval = 500;
 let lastTime = 0;
 
+let gameOver = false; // ✅ IMPORTANT FIX
+
 function randomPiece(){
   let i = Math.floor(Math.random()*pieces.length);
-
   return {
     shape: pieces[i],
     color: colors[i],
@@ -151,7 +148,7 @@ function randomPiece(){
 let current = randomPiece();
 let next = randomPiece();
 
-/* BOARD */
+/* DRAW BOARD */
 function drawBoard(){
   ctx.fillStyle = "#050505";
   ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -164,14 +161,13 @@ function drawBoard(){
         ctx.shadowBlur = 10;
 
         ctx.fillRect(x*SIZE,y*SIZE,SIZE,SIZE);
-
         ctx.shadowBlur = 0;
       }
     }
   }
 }
 
-/* PIECE */
+/* DRAW PIECE */
 function drawPiece(p, c){
   c.fillStyle = p.color;
   c.shadowColor = p.color;
@@ -193,8 +189,8 @@ function collide(p){
   for(let y=0;y<p.shape.length;y++){
     for(let x=0;x<p.shape[y].length;x++){
       if(p.shape[y][x]){
-        let nx=p.x+x;
-        let ny=p.y+y;
+        let nx = p.x + x;
+        let ny = p.y + y;
 
         if(nx<0||nx>=COLS||ny>=ROWS) return true;
         if(ny>=0 && board[ny][nx]) return true;
@@ -234,20 +230,11 @@ function clearLines(){
   }
 }
 
-/* ROTATE */
-function rotate(p){
-  let n = p.shape[0].map((_,i)=>
-    p.shape.map(r=>r[i]).reverse()
-  );
-
-  let old = p.shape;
-  p.shape = n;
-
-  if(collide(p)) p.shape = old;
-}
-
-/* DROP */
+/* DROP (FIXED GAME OVER LOCK) */
 function drop(){
+
+  if(gameOver) return;
+
   current.y++;
 
   if(collide(current)){
@@ -258,7 +245,9 @@ function drop(){
     current = next;
     next = randomPiece();
 
+    // ✅ ONLY ONCE GAME OVER
     if(collide(current)){
+      gameOver = true;
       alert("Game Over");
       location.reload();
     }
@@ -269,48 +258,43 @@ function drop(){
 
 /* INPUT */
 document.addEventListener("keydown",e=>{
+  if(gameOver) return;
+
   if(e.key==="ArrowLeft"){current.x--;if(collide(current))current.x++;}
   if(e.key==="ArrowRight"){current.x++;if(collide(current))current.x--;}
   if(e.key==="ArrowDown"){drop();}
-  if(e.key==="ArrowUp"){rotate(current);}
+  if(e.key==="ArrowUp"){rotate();}
 });
 
-/* PAUSE */
-let paused = false;
-function togglePause(){
-  paused = !paused;
-}
+/* ROTATE */
+function rotate(){
+  let n = current.shape[0].map((_,i)=>
+    current.shape.map(r=>r[i]).reverse()
+  );
 
-/* HIGH SCORE */
-let hs = localStorage.getItem("highScore")||0;
-document.getElementById("high").innerText = hs;
+  let old = current.shape;
+  current.shape = n;
+
+  if(collide(current)) current.shape = old;
+}
 
 /* LOOP */
 function loop(time=0){
-  if(!paused){
-    let delta = time-lastTime;
-    lastTime = time;
-    dropCounter += delta;
+  if(gameOver) return;
 
-    if(dropCounter > dropInterval){
-      drop();
-    }
+  let delta = time-lastTime;
+  lastTime = time;
+  dropCounter += delta;
 
-    drawBoard();
-
-    drawPiece(current, ctx);
-
-    /* NEXT PIECE FIXED CENTERING */
-    nctx.clearRect(0,0,120,120);
-
-    let preview = {
-      ...next,
-      x: 1,
-      y: 1
-    };
-
-    drawPiece(preview, nctx);
+  if(dropCounter > dropInterval){
+    drop();
   }
+
+  drawBoard();
+  drawPiece(current, ctx);
+
+  nctx.clearRect(0,0,120,120);
+  drawPiece(next, nctx);
 
   requestAnimationFrame(loop);
 }
