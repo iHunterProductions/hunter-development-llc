@@ -15,17 +15,19 @@
       color: #00ffff;
     }
 
+    /* SMALL TOP-LEFT BACK BUTTON */
     .back {
       position: absolute;
-      top: 15px;
-      left: 15px;
-      padding: 8px 12px;
+      top: 10px;
+      left: 10px;
+      padding: 6px 10px;
       border: 2px solid #00ffff;
       background: transparent;
       color: #00ffff;
       cursor: pointer;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #00ffff;
+      border-radius: 8px;
+      font-size: 12px;
+      box-shadow: 0 0 8px #00ffff;
     }
 
     .wrap {
@@ -87,9 +89,6 @@
     <h2>Next</h2>
     <canvas id="next" width="120" height="120"></canvas>
 
-    <h2>Hold</h2>
-    <canvas id="hold" width="120" height="120"></canvas>
-
     <button onclick="togglePause()">Pause</button>
     <button onclick="location.reload()">Restart</button>
   </div>
@@ -102,15 +101,13 @@ const ctx = canvas.getContext("2d");
 const nextC = document.getElementById("next");
 const nctx = nextC.getContext("2d");
 
-const holdC = document.getElementById("hold");
-const hctx = holdC.getContext("2d");
-
 const COLS = 10;
 const ROWS = 20;
 const SIZE = 30;
 
 let board = Array.from({length: ROWS}, () => Array(COLS).fill(0));
 
+/* PIECES (NO COLORS) */
 const pieces = [
   [[1,1,1,1]],
   [[1,1],[1,1]],
@@ -121,8 +118,6 @@ const pieces = [
   [[0,0,1],[1,1,1]]
 ];
 
-const colors = ["#00ffff","#ffff00","#aa00ff","#00ff00","#ff0044","#0066ff","#ff8800"];
-
 let score = 0;
 let level = 1;
 let paused = false;
@@ -131,14 +126,13 @@ let dropCounter = 0;
 let dropInterval = 500;
 let lastTime = 0;
 
-let hold = null;
-let holdUsed = false;
+/* ONLY ONE COLOR NOW */
+const PIECE_COLOR = "#00ffff";
 
 function randomPiece(){
   let i = Math.floor(Math.random()*pieces.length);
   return {
     shape: pieces[i],
-    color: colors[i],
     x: 3,
     y: 0
   };
@@ -147,38 +141,29 @@ function randomPiece(){
 let current = randomPiece();
 let next = randomPiece();
 
-/* ---------- DRAW BOARD ---------- */
+/* BOARD */
 function drawBoard(){
   ctx.fillStyle = "#050505";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  // grid
-  for(let x=0;x<COLS;x++){
-    for(let y=0;y<ROWS;y++){
-      ctx.strokeStyle = "rgba(0,255,255,0.05)";
-      ctx.strokeRect(x*SIZE,y*SIZE,SIZE,SIZE);
-    }
-  }
-
   for(let y=0;y<ROWS;y++){
     for(let x=0;x<COLS;x++){
       if(board[y][x]){
-        ctx.fillStyle = board[y][x];
-        ctx.shadowColor = board[y][x];
-        ctx.shadowBlur = 12;
+        ctx.fillStyle = PIECE_COLOR;
+        ctx.shadowColor = PIECE_COLOR;
+        ctx.shadowBlur = 10;
 
         ctx.fillRect(x*SIZE,y*SIZE,SIZE,SIZE);
-
         ctx.shadowBlur = 0;
       }
     }
   }
 }
 
-/* ---------- PIECE ---------- */
+/* PIECE */
 function drawPiece(p, c){
-  c.fillStyle = p.color;
-  c.shadowColor = p.color;
+  c.fillStyle = PIECE_COLOR;
+  c.shadowColor = PIECE_COLOR;
   c.shadowBlur = 12;
 
   for(let y=0;y<p.shape.length;y++){
@@ -192,13 +177,13 @@ function drawPiece(p, c){
   c.shadowBlur = 0;
 }
 
-/* ---------- COLLISION ---------- */
+/* COLLISION */
 function collide(p){
   for(let y=0;y<p.shape.length;y++){
     for(let x=0;x<p.shape[y].length;x++){
       if(p.shape[y][x]){
-        let nx = p.x+x;
-        let ny = p.y+y;
+        let nx=p.x+x;
+        let ny=p.y+y;
 
         if(nx<0||nx>=COLS||ny>=ROWS) return true;
         if(ny>=0 && board[ny][nx]) return true;
@@ -208,26 +193,26 @@ function collide(p){
   return false;
 }
 
-/* ---------- GHOST ---------- */
-function ghostPiece(){
+/* GHOST */
+function ghost(){
   let g = JSON.parse(JSON.stringify(current));
   while(!collide(g)) g.y++;
   g.y--;
   return g;
 }
 
-/* ---------- MERGE ---------- */
+/* MERGE */
 function merge(){
   current.shape.forEach((r,y)=>{
     r.forEach((v,x)=>{
       if(v){
-        board[current.y+y][current.x+x] = current.color;
+        board[current.y+y][current.x+x] = 1;
       }
     });
   });
 }
 
-/* ---------- CLEAR ---------- */
+/* CLEAR */
 function clearLines(){
   for(let y=ROWS-1;y>=0;y--){
     if(board[y].every(c=>c)){
@@ -236,40 +221,37 @@ function clearLines(){
 
       score += 100;
       level = Math.floor(score/500)+1;
-      dropInterval = Math.max(100, 500 - level*35);
+      dropInterval = Math.max(100,500-(level*35));
 
       document.getElementById("score").innerText = score;
       document.getElementById("level").innerText = level;
+      updateHigh();
 
       y++;
     }
   }
 }
 
-/* ---------- ROTATE ---------- */
+/* ROTATE */
 function rotate(p){
-  let newShape = p.shape[0].map((_,i)=>
+  let n = p.shape[0].map((_,i)=>
     p.shape.map(r=>r[i]).reverse()
   );
 
   let old = p.shape;
-  p.shape = newShape;
-
+  p.shape = n;
   if(collide(p)) p.shape = old;
 }
 
-/* ---------- DROP ---------- */
+/* DROP */
 function drop(){
   current.y++;
-
   if(collide(current)){
     current.y--;
     merge();
     clearLines();
-
     current = next;
     next = randomPiece();
-    holdUsed = false;
 
     if(collide(current)){
       alert("Game Over");
@@ -280,81 +262,55 @@ function drop(){
   dropCounter = 0;
 }
 
-/* ---------- HOLD ---------- */
-function holdPieceFunc(){
-  if(holdUsed) return;
-
-  if(!hold){
-    hold = current;
-    current = next;
-    next = randomPiece();
-  } else {
-    let temp = current;
-    current = hold;
-    hold = temp;
-  }
-
-  current.x = 3;
-  current.y = 0;
-  holdUsed = true;
-}
-
-/* ---------- PAUSE ---------- */
-function togglePause(){
-  paused = !paused;
-}
-
-/* ---------- INPUT ---------- */
+/* INPUT */
 document.addEventListener("keydown",e=>{
   if(e.key==="ArrowLeft"){current.x--;if(collide(current))current.x++;}
   if(e.key==="ArrowRight"){current.x++;if(collide(current))current.x--;}
   if(e.key==="ArrowDown"){drop();}
   if(e.key==="ArrowUp"){rotate(current);}
-  if(e.key===" "){holdPieceFunc();}
-  if(e.key==="p"){togglePause();}
 });
 
-/* ---------- LOOP ---------- */
+/* PAUSE */
+function togglePause(){
+  paused = !paused;
+}
+
+/* HIGH SCORE */
+function updateHigh(){
+  let h = localStorage.getItem("highScore")||0;
+  if(score>h){
+    localStorage.setItem("highScore",score);
+  }
+  document.getElementById("high").innerText =
+    localStorage.getItem("highScore")||0;
+}
+
+/* LOOP */
 function loop(time=0){
   if(!paused){
     let delta = time-lastTime;
-    lastTime = time;
-    dropCounter += delta;
+    lastTime=time;
+    dropCounter+=delta;
 
-    if(dropCounter > dropInterval){
-      drop();
-    }
+    if(dropCounter>dropInterval) drop();
 
     drawBoard();
 
-    let g = ghostPiece();
+    let g = ghost();
     ctx.globalAlpha = 0.2;
-    drawPiece(g, ctx);
+    drawPiece(g,ctx);
     ctx.globalAlpha = 1;
 
-    drawPiece(current, ctx);
+    drawPiece(current,ctx);
 
     nctx.clearRect(0,0,120,120);
-    drawPiece(next, nctx);
-
-    hctx.clearRect(0,0,120,120);
-    if(hold) drawPiece(hold, hctx);
+    drawPiece(next,nctx);
   }
 
   requestAnimationFrame(loop);
 }
 
-/* ---------- HIGH SCORE ---------- */
-let hs = localStorage.getItem("highScore")||0;
-document.getElementById("high").innerText = hs;
-
-function saveHS(){
-  if(score>hs){
-    localStorage.setItem("highScore",score);
-  }
-}
-setInterval(saveHS,1000);
-
+updateHigh();
 loop();
 </script>
 
