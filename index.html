@@ -33,6 +33,7 @@
       text-align: center;
     }
 
+    /* 🎮 BASE BUTTON */
     button {
       width: 95%;
       padding: 10px;
@@ -42,13 +43,51 @@
       font-weight: bold;
       cursor: pointer;
       border-radius: 6px;
+      transition: all 0.25s ease;
     }
 
+    /* 🔥 HOVER EFFECT (CYAN → DARK BLUE GLOW) */
     button:hover {
-      box-shadow: 0 0 20px #003366;
+      transform: translateY(-3px) scale(1.03);
+      box-shadow:
+        0 0 10px #001a33,
+        0 0 20px #00264d,
+        0 0 35px #003366,
+        0 0 50px #004080;
     }
 
     #hub { display: none; }
+
+    /* 👑 ADMIN PANEL LAYOUT */
+    #adminPanel {
+      display: none;
+      margin-top: 10px;
+      border-top: 1px solid #00ffff;
+      padding-top: 10px;
+    }
+
+    .adminList {
+      max-height: 120px;
+      overflow-y: auto;
+      border: 1px solid #00ffff;
+      margin: 10px 0;
+      padding: 5px;
+      text-align: left;
+      font-size: 12px;
+    }
+
+    .adminRow {
+      display: flex;
+      justify-content: space-between;
+      margin: 4px 0;
+    }
+
+    .miniBtn {
+      width: auto;
+      padding: 5px 8px;
+      font-size: 11px;
+      margin-left: 5px;
+    }
   </style>
 </head>
 
@@ -77,9 +116,15 @@
   <button onclick="location.href='games/tetris/'">Tetris</button>
   <button onclick="location.href='games/scramble/'">Scramble</button>
 
-  <button id="adminBtn" style="display:none;" onclick="openAdmin()">
+  <button id="adminBtn" onclick="toggleAdmin()">
     Admin Panel
   </button>
+
+  <!-- 👑 ADMIN PANEL -->
+  <div id="adminPanel">
+    <h4>Users</h4>
+    <div id="userList" class="adminList"></div>
+  </div>
 
   <button onclick="logout()">Logout</button>
 </div>
@@ -141,6 +186,52 @@ function loadHub(user){
   }
 }
 
+/* ADMIN TOGGLE */
+function toggleAdmin(){
+  const panel = document.getElementById("adminPanel");
+
+  if(panel.style.display === "block"){
+    panel.style.display = "none";
+  } else {
+    panel.style.display = "block";
+    loadUsers();
+  }
+}
+
+/* LOAD USERS (CLEAN LIST UI) */
+function loadUsers(){
+  let users = JSON.parse(localStorage.getItem("users") || "[]");
+  const list = document.getElementById("userList");
+
+  list.innerHTML = "";
+
+  users.forEach(u => {
+    const row = document.createElement("div");
+    row.className = "adminRow";
+
+    row.innerHTML = `
+      <span>${u}</span>
+      <span>
+        <button class="miniBtn" onclick="banUser('${u}')">Ban</button>
+        <button class="miniBtn" onclick="muteUser('${u}')">Mute</button>
+      </span>
+    `;
+
+    list.appendChild(row);
+  });
+}
+
+/* ADMIN ACTIONS */
+function banUser(u){
+  localStorage.setItem("banned_" + u, "true");
+  alert(u + " banned");
+}
+
+function muteUser(u){
+  localStorage.setItem("muted_" + u, "true");
+  alert(u + " muted");
+}
+
 /* AUTO LOGIN */
 window.onload = () => {
   const saved = localStorage.getItem("currentUser");
@@ -151,28 +242,6 @@ window.onload = () => {
 function logout(){
   localStorage.removeItem("currentUser");
   location.reload();
-}
-
-/* ADMIN PANEL */
-function openAdmin(){
-  let users = JSON.parse(localStorage.getItem("users") || "[]");
-
-  let action = prompt(
-    "USERS:\n\n" + users.join("\n") +
-    "\n\nCommands:\nban:name\nunban:name\nmute:name\nunmute:name"
-  );
-
-  if(!action) return;
-
-  let [cmd, target] = action.split(":");
-
-  if(cmd === "ban") localStorage.setItem("banned_" + target, "true");
-  if(cmd === "unban") localStorage.removeItem("banned_" + target);
-
-  if(cmd === "mute") localStorage.setItem("muted_" + target, "true");
-  if(cmd === "unmute") localStorage.removeItem("muted_" + target);
-
-  alert("Action applied to " + target);
 }
 </script>
 
