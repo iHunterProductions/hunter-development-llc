@@ -6,96 +6,153 @@
   <style>
     body {
       margin: 0;
-      background: radial-gradient(circle at center, #05070a, #000);
-      color: #00ffff;
+      background: radial-gradient(circle, #05070a, #000);
       font-family: Arial;
+      color: #00ffff;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
     }
 
-    .menu {
-      text-align: center;
+    .box {
+      width: 360px;
       border: 2px solid #00ffff;
-      padding: 30px;
-      border-radius: 16px;
-      box-shadow: 0 0 25px rgba(0,255,255,0.6);
-      width: 340px;
-      background: rgba(0,0,0,0.6);
+      padding: 25px;
+      border-radius: 14px;
+      box-shadow: 0 0 20px #00ffff;
+      text-align: center;
     }
 
-    h1 {
-      margin-bottom: 20px;
-      font-size: 22px;
-      letter-spacing: 1px;
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 6px 0;
+      border: none;
+      border-radius: 6px;
+      text-align: center;
     }
 
-    /* BASE BUTTON (CYAN) */
     button {
+      width: 95%;
+      padding: 10px;
+      margin-top: 10px;
+      background: #00c8c8;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      box-shadow: 0 0 20px #003366;
+      transform: scale(1.03);
+    }
+
+    #hub {
+      display: none;
+    }
+
+    .gameBtn {
       display: block;
       width: 260px;
-      margin: 12px auto;
-      padding: 14px;
-
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-
-      background: #00c8c8;
-      color: #001010;
-      font-weight: bold;
-
-      transition: all 0.25s ease;
-
-      box-shadow: 0 0 6px rgba(0, 200, 200, 0.5);
-    }
-
-    /* HOVER = DARK BLUE GLOW */
-    button:hover {
-      transform: translateY(-4px) scale(1.05);
-
-      box-shadow:
-        0 0 8px #001a33,
-        0 0 16px #00264d,
-        0 0 28px #003366,
-        0 0 45px #004080;
-    }
-
-    /* CLICK EFFECT */
-    button:active {
-      transform: scale(0.97);
-      box-shadow: 0 0 10px #001a33 inset;
-    }
-
-    /* TERMS SPECIAL (optional accent) */
-    .terms {
-      background: #00c8c8;
+      margin: 10px auto;
     }
   </style>
 </head>
 
 <body>
 
-<div class="menu">
-  <h1>Hunter Development LLC</h1>
+<!-- LOGIN SCREEN -->
+<div id="login" class="box">
+  <h2>Hunter Arcade</h2>
 
-  <button class="terms" onclick="alert('Rules and Terms of Use: To be determined')">
-    Terms of Use
-  </button>
+  <input id="username" placeholder="Username">
+  <input id="password" type="password" placeholder="Password (0708)">
 
-  <button onclick="location.href='chat.html'">
-    Chat.Me 2
-  </button>
-
-  <button onclick="location.href='games/scramble/'">
-    Scrambled Word Game
-  </button>
-
-  <button onclick="location.href='games/tetris/'">
-    Tetris
-  </button>
+  <button onclick="signUp()">Sign Up</button>
+  <button onclick="signIn()">Sign In</button>
 </div>
+
+<!-- HUB -->
+<div id="hub" class="box">
+  <h2 id="welcome"></h2>
+
+  <button class="gameBtn" onclick="location.href='chat.html'">Chat.Me 2</button>
+  <button class="gameBtn" onclick="location.href='games/tetris/'">Tetris</button>
+  <button class="gameBtn" onclick="location.href='games/scramble/'">Scramble</button>
+
+  <button onclick="logout()">Logout</button>
+</div>
+
+<script>
+let currentUser = null;
+
+/* SIGN UP */
+function signUp(){
+  const user = document.getElementById("username").value;
+  const pass = document.getElementById("password").value;
+
+  if(pass !== "0708"){
+    alert("Wrong password");
+    return;
+  }
+
+  if(!user){
+    alert("Enter username");
+    return;
+  }
+
+  localStorage.setItem("user_" + user, pass);
+  localStorage.setItem("currentUser", user);
+
+  loadHub(user);
+}
+
+/* SIGN IN */
+function signIn(){
+  const user = document.getElementById("username").value;
+  const pass = document.getElementById("password").value;
+
+  const savedPass = localStorage.getItem("user_" + user);
+
+  if(pass !== savedPass){
+    alert("Invalid login");
+    return;
+  }
+
+  localStorage.setItem("currentUser", user);
+
+  loadHub(user);
+}
+
+/* LOAD HUB */
+function loadHub(user){
+  currentUser = user;
+
+  document.getElementById("login").style.display = "none";
+  document.getElementById("hub").style.display = "block";
+
+  document.getElementById("welcome").innerText =
+    `Welcome, ${user}!`;
+}
+
+/* AUTO LOGIN */
+window.onload = () => {
+  const saved = localStorage.getItem("currentUser");
+
+  if(saved){
+    loadHub(saved);
+  }
+};
+
+/* LOGOUT */
+function logout(){
+  localStorage.removeItem("currentUser");
+  location.reload();
+}
+</script>
 
 </body>
 </html>
