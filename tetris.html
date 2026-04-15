@@ -1,35 +1,75 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Tetris</title>
+  <title>Tetris Arcade Deluxe</title>
+
   <style>
     body {
       margin: 0;
-      background: black;
+      background: radial-gradient(circle, #050505, #000);
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      color: white;
       font-family: Arial;
+      color: #00ffff;
     }
 
-    canvas {
-      background: #111;
-      border: 2px solid white;
+    .back {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background: transparent;
+      color: #00ffff;
+      border: 2px solid #00ffff;
+      padding: 8px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 0 10px #00ffff;
     }
 
     .wrap {
       display: flex;
       gap: 20px;
+      padding: 20px;
+      border: 3px solid #00ffff;
+      box-shadow: 0 0 25px #00ffff;
+      border-radius: 15px;
+      background: rgba(0,0,0,0.8);
+    }
+
+    canvas {
+      background: #000;
+      border: 2px solid #00ffff;
+      box-shadow: 0 0 15px #00ffff;
     }
 
     .panel {
-      width: 150px;
+      width: 180px;
+    }
+
+    h2 {
+      margin: 8px 0 4px;
+      text-shadow: 0 0 6px #00ffff;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 10px;
+      width: 100%;
+      background: #00ffff;
+      border: none;
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 8px;
     }
   </style>
 </head>
+
 <body>
+
+<button class="back" onclick="location.href='index.html'">⬅ Back</button>
 
 <div class="wrap">
   <canvas id="game" width="300" height="600"></canvas>
@@ -41,6 +81,16 @@
     <h2>Level</h2>
     <div id="level">1</div>
 
+    <h2>High Score</h2>
+    <div id="high">0</div>
+
+    <h2>Next</h2>
+    <canvas id="next" width="120" height="120"></canvas>
+
+    <h2>Hold</h2>
+    <canvas id="hold" width="120" height="120"></canvas>
+
+    <button onclick="pauseGame()">Pause</button>
     <button onclick="location.reload()">Restart</button>
   </div>
 </div>
@@ -48,6 +98,12 @@
 <script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
+
+const nextC = document.getElementById("next");
+const nctx = nextC.getContext("2d");
+
+const holdC = document.getElementById("hold");
+const hctx = holdC.getContext("2d");
 
 const COLS = 10;
 const ROWS = 20;
@@ -69,12 +125,16 @@ const colors = ["cyan","yellow","purple","green","red","blue","orange"];
 
 let score = 0;
 let level = 1;
+let paused = false;
 
 let dropCounter = 0;
 let dropInterval = 500;
 let lastTime = 0;
 
-function piece() {
+let holdPiece = null;
+let holdUsed = false;
+
+function rand() {
   let id = Math.floor(Math.random()*pieces.length);
   return {
     shape: pieces[id],
@@ -84,28 +144,29 @@ function piece() {
   };
 }
 
-let current = piece();
+let current = rand();
+let next = rand();
 
-function drawBoard() {
-  ctx.fillStyle = "#000";
+function drawBoard(){
+  ctx.fillStyle="#000";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
   for(let y=0;y<ROWS;y++){
     for(let x=0;x<COLS;x++){
       if(board[y][x]){
-        ctx.fillStyle = board[y][x];
+        ctx.fillStyle=board[y][x];
         ctx.fillRect(x*SIZE,y*SIZE,SIZE,SIZE);
       }
     }
   }
 }
 
-function drawPiece(p){
-  ctx.fillStyle = p.color;
+function drawPiece(p, context, ox=0, oy=0){
+  context.fillStyle=p.color;
   for(let y=0;y<p.shape.length;y++){
     for(let x=0;x<p.shape[y].length;x++){
       if(p.shape[y][x]){
-        ctx.fillRect((p.x+x)*SIZE,(p.y+y)*SIZE,SIZE,SIZE);
+        context.fillRect((p.x+x+ox)*SIZE,(p.y+y+oy)*SIZE,SIZE,SIZE);
       }
     }
   }
@@ -115,9 +176,8 @@ function collision(p){
   for(let y=0;y<p.shape.length;y++){
     for(let x=0;x<p.shape[y].length;x++){
       if(p.shape[y][x]){
-        let nx = p.x+x;
-        let ny = p.y+y;
-
+        let nx=p.x+x;
+        let ny=p.y+y;
         if(nx<0||nx>=COLS||ny>=ROWS) return true;
         if(ny>=0 && board[ny][nx]) return true;
       }
@@ -126,11 +186,18 @@ function collision(p){
   return false;
 }
 
+function ghost(){
+  let g = JSON.parse(JSON.stringify(current));
+  while(!collision(g)) g.y++;
+  g.y--;
+  return g;
+}
+
 function merge(){
-  current.shape.forEach((row,y)=>{
-    row.forEach((val,x)=>{
-      if(val){
-        board[current.y+y][current.x+x] = current.color;
+  current.shape.forEach((r,y)=>{
+    r.forEach((v,x)=>{
+      if(v){
+        board[current.y+y][current.x+x]=current.color;
       }
     });
   });
@@ -138,28 +205,26 @@ function merge(){
 
 function clearLines(){
   for(let y=ROWS-1;y>=0;y--){
-    if(board[y].every(cell=>cell)){
+    if(board[y].every(c=>c)){
       board.splice(y,1);
       board.unshift(Array(COLS).fill(0));
-      score += 100;
-      level = Math.floor(score/500)+1;
+      score+=100;
+      level=Math.floor(score/500)+1;
+      dropInterval=Math.max(100,500-(level-1)*40);
 
-      document.getElementById("score").innerText = score;
-      document.getElementById("level").innerText = level;
+      document.getElementById("score").innerText=score;
+      document.getElementById("level").innerText=level;
+      updateHigh();
       y++;
     }
   }
 }
 
 function rotate(p){
-  let newShape = p.shape[0].map((_,i)=>
-    p.shape.map(r=>r[i]).reverse()
-  );
-
-  let old = p.shape;
-  p.shape = newShape;
-
-  if(collision(p)) p.shape = old;
+  let n=p.shape[0].map((_,i)=>p.shape.map(r=>r[i]).reverse());
+  let old=p.shape;
+  p.shape=n;
+  if(collision(p)) p.shape=old;
 }
 
 function drop(){
@@ -168,39 +233,90 @@ function drop(){
     current.y--;
     merge();
     clearLines();
-    current = piece();
+    current=next;
+    next=rand();
+    holdUsed=false;
 
     if(collision(current)){
       alert("Game Over");
       location.reload();
     }
   }
-  dropCounter = 0;
+  dropCounter=0;
+}
+
+function hold(){
+  if(holdUsed) return;
+
+  if(!holdPiece){
+    holdPiece=current;
+    current=next;
+    next=rand();
+  } else {
+    let temp=current;
+    current=holdPiece;
+    holdPiece=temp;
+  }
+
+  current.x=3;
+  current.y=0;
+  holdUsed=true;
+}
+
+function pauseGame(){
+  paused=!paused;
+}
+
+function updateHigh(){
+  let h=localStorage.getItem("highScore")||0;
+  if(score>h){
+    localStorage.setItem("highScore",score);
+  }
+  document.getElementById("high").innerText=localStorage.getItem("highScore")||0;
 }
 
 document.addEventListener("keydown",e=>{
-  if(e.key==="ArrowLeft"){ current.x--; if(collision(current)) current.x++; }
-  if(e.key==="ArrowRight"){ current.x++; if(collision(current)) current.x--; }
-  if(e.key==="ArrowDown"){ drop(); }
-  if(e.key==="ArrowUp"){ rotate(current); }
+  if(e.key==="ArrowLeft"){current.x--;if(collision(current))current.x++;}
+  if(e.key==="ArrowRight"){current.x++;if(collision(current))current.x--;}
+  if(e.key==="ArrowDown"){drop();}
+  if(e.key==="ArrowUp"){rotate(current);}
+  if(e.key===" "){hold();}
+  if(e.key==="p"){pauseGame();}
 });
 
-function update(time=0){
-  let delta = time-lastTime;
-  lastTime=time;
+function loop(time=0){
+  if(!paused){
+    let d=time-lastTime;
+    lastTime=time;
+    dropCounter+=d;
 
-  dropCounter+=delta;
-  if(dropCounter>dropInterval){
-    drop();
+    if(dropCounter>dropInterval) drop();
+
+    drawBoard();
+
+    let g=ghost();
+    ctx.globalAlpha=0.3;
+    drawPiece(g,ctx);
+    ctx.globalAlpha=1;
+
+    drawPiece(current,ctx);
+
+    // next
+    nctx.clearRect(0,0,120,120);
+    drawPiece(next,nctx);
+
+    // hold
+    hctx.clearRect(0,0,120,120);
+    if(holdPiece){
+      drawPiece(holdPiece,hctx);
+    }
   }
 
-  drawBoard();
-  drawPiece(current);
-
-  requestAnimationFrame(update);
+  requestAnimationFrame(loop);
 }
 
-update();
+updateHigh();
+loop();
 </script>
 
 </body>
