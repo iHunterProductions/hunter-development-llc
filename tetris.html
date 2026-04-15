@@ -57,12 +57,12 @@ function drawBoard() {
   }
 }
 
-function drawPiece(p, context, offsetX=0, offsetY=0) {
-  context.fillStyle = p.color;
+function drawPiece(p){
+  ctx.fillStyle = p.color;
   for(let y=0;y<p.shape.length;y++){
     for(let x=0;x<p.shape[y].length;x++){
       if(p.shape[y][x]){
-        context.fillRect((p.x+x)*SIZE,(p.y+y)*SIZE,SIZE,SIZE);
+        ctx.fillRect((p.x+x)*SIZE,(p.y+y)*SIZE,SIZE,SIZE);
       }
     }
   }
@@ -94,24 +94,18 @@ function merge(){
 }
 
 function clearLines(){
-  let lines = 0;
-
   for(let y=ROWS-1;y>=0;y--){
     if(board[y].every(cell=>cell)){
       board.splice(y,1);
       board.unshift(Array(COLS).fill(0));
-      lines++;
+      score += 100;
+      level = Math.floor(score/500)+1;
+      dropInterval = Math.max(100, 500 - (level-1)*50);
+
+      document.getElementById("score").innerText = score;
+      document.getElementById("level").innerText = level;
       y++;
     }
-  }
-
-  if(lines){
-    score += lines * 100;
-    level = Math.floor(score/500)+1;
-    dropInterval = Math.max(100, 500 - (level-1)*50);
-
-    document.getElementById("score").innerText = score;
-    document.getElementById("level").innerText = level;
   }
 }
 
@@ -145,7 +139,7 @@ function drop(){
   dropCounter = 0;
 }
 
-function update(time = 0){
+function update(time=0){
   let delta = time - lastTime;
   lastTime = time;
 
@@ -155,7 +149,7 @@ function update(time = 0){
   }
 
   drawBoard();
-  drawPiece(current, ctx);
+  drawPiece(current);
 
   requestAnimationFrame(update);
 }
