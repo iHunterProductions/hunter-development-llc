@@ -7,8 +7,8 @@
     body {
       margin: 0;
       background: #000;
-      color: #00ffff;
       font-family: Arial;
+      color: #00ffff;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -20,7 +20,6 @@
       border: 2px solid #00ffff;
       padding: 20px;
       border-radius: 12px;
-      box-shadow: 0 0 20px #00ffff;
       text-align: center;
     }
 
@@ -54,14 +53,8 @@
       margin-top: 8px;
     }
 
-    .msg {
-      margin: 5px 0;
-    }
-
-    .name {
-      color: #ff00ff;
-      font-weight: bold;
-    }
+    .msg { margin: 5px 0; }
+    .name { color: #ff00ff; font-weight: bold; }
   </style>
 </head>
 
@@ -83,13 +76,17 @@
 <script src="https://cdn.ably.io/lib/ably.min-1.js"></script>
 
 <script>
-let channel;
+const ADMIN = "iHunterDoesProductions";
 
-/* USE GLOBAL ACCOUNT SYSTEM */
 let username = localStorage.getItem("currentUser");
 
 if(!username){
   alert("You must log in first");
+  window.location.href = "index.html";
+}
+
+if(localStorage.getItem("banned_" + username) === "true"){
+  alert("You are banned.");
   window.location.href = "index.html";
 }
 
@@ -101,25 +98,26 @@ const ably = new Ably.Realtime({
   key: "c-wtfg.-Nr1zw:P37xNKXR2B4E-KOPhClqoUsFYS51FUiFroqUPVr3DZM"
 });
 
-channel = ably.channels.get("chat-me-2");
+const channel = ably.channels.get("chat-me-2");
 
 channel.subscribe("message", msg => {
   addMessage(msg.data.name, msg.data.text);
 });
 
-/* MESSAGE UI */
 function addMessage(name, text){
   const div = document.createElement("div");
   div.className = "msg";
   div.innerHTML = `<span class="name">${name}:</span> ${text}`;
-
-  const box = document.getElementById("messages");
-  box.appendChild(div);
-  box.scrollTop = box.scrollHeight;
+  document.getElementById("messages").appendChild(div);
 }
 
-/* SEND */
+/* MUTE CHECK */
 function sendMsg(){
+  if(localStorage.getItem("muted_" + username) === "true"){
+    alert("You are muted.");
+    return;
+  }
+
   const input = document.getElementById("msg");
   const text = input.value;
 
@@ -133,15 +131,9 @@ function sendMsg(){
   input.value = "";
 }
 
-/* HOME */
 function goHome(){
   window.location.href = "index.html";
 }
-
-/* ENTER KEY */
-document.addEventListener("keydown", e=>{
-  if(e.key === "Enter") sendMsg();
-});
 </script>
 
 </body>
