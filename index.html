@@ -6,7 +6,7 @@
   <style>
     body {
       margin: 0;
-      background: #000;
+      background: radial-gradient(circle at center, #050505, #000);
       color: #00ffff;
       font-family: Arial;
       display: flex;
@@ -19,33 +19,64 @@
       text-align: center;
       border: 2px solid #00ffff;
       padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 0 20px #00ffff;
-      width: 300px;
+      border-radius: 16px;
+      box-shadow: 0 0 25px #00ffff;
+      width: 320px;
     }
 
     h1 {
-      margin-bottom: 15px;
+      margin-bottom: 20px;
       font-size: 22px;
+      letter-spacing: 1px;
     }
 
+    /* BUTTON BASE */
     button {
       display: block;
-      width: 240px;
-      margin: 10px auto;
-      padding: 12px;
+      width: 260px;
+      margin: 12px auto;
+      padding: 14px;
       border: none;
-      background: #00ffff;
-      color: black;
+      background: #001f1f;
+      color: #00ffff;
       font-weight: bold;
-      border-radius: 8px;
+      border-radius: 10px;
       cursor: pointer;
-      transition: 0.2s;
+
+      transition: all 0.25s ease;
+      box-shadow: 0 0 5px #00ffff inset;
     }
 
+    /* HOVER MAGIC */
     button:hover {
-      background: #00dddd;
-      transform: scale(1.02);
+      transform: translateY(-5px) scale(1.05);
+      background: #00ffff;
+      color: #000;
+
+      box-shadow:
+        0 0 10px #00ffff,
+        0 0 20px #00ffff,
+        0 0 40px #00ffff;
+    }
+
+    /* CLICK EFFECT */
+    button:active {
+      transform: scale(0.97);
+      box-shadow: 0 0 10px #00ffff inset;
+    }
+
+    /* SPECIAL TOP BUTTON */
+    .terms {
+      background: #002a2a;
+    }
+
+    .terms:hover {
+      box-shadow:
+        0 0 10px #ff00ff,
+        0 0 20px #ff00ff,
+        0 0 40px #ff00ff;
+      background: #ff00ff;
+      color: white;
     }
   </style>
 </head>
@@ -55,26 +86,21 @@
 <div class="menu">
   <h1>Hunter Development LLC</h1>
 
-  <!-- TERMS -->
-  <button onclick="alert('Rules and Terms of Use: To be determined')">
+  <button class="terms" onclick="alert('Rules and Terms of Use: To be determined')">
     Terms of Use
   </button>
 
-  <!-- CHAT -->
   <button onclick="location.href='chat.html'">
     Chat.Me 2
   </button>
 
-  <!-- SCRAMBLE -->
   <button onclick="location.href='games/scramble/'">
     Scrambled Word Game
   </button>
 
-  <!-- TETRIS -->
   <button onclick="location.href='games/tetris/'">
     Tetris
   </button>
-
 </div>
 
 </body>
