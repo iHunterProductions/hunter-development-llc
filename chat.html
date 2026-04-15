@@ -36,9 +36,8 @@
     input {
       width: 90%;
       padding: 10px;
-      margin: 5px 0;
-      border-radius: 6px;
       border: none;
+      border-radius: 6px;
       text-align: center;
     }
 
@@ -55,6 +54,11 @@
 
     .msg { margin: 5px 0; }
     .name { color: #ff00ff; font-weight: bold; }
+
+    #status {
+      color: red;
+      margin-top: 5px;
+    }
   </style>
 </head>
 
@@ -64,6 +68,7 @@
   <h2>Chat.Me 2</h2>
 
   <h3 id="welcome"></h3>
+  <div id="status"></div>
 
   <div id="messages"></div>
 
@@ -76,12 +81,10 @@
 <script src="https://cdn.ably.io/lib/ably.min-1.js"></script>
 
 <script>
-const ADMIN = "iHunterDoesProductions";
-
-let username = localStorage.getItem("currentUser");
+const username = localStorage.getItem("currentUser");
 
 if(!username){
-  alert("You must log in first");
+  alert("Login required");
   window.location.href = "index.html";
 }
 
@@ -90,8 +93,11 @@ if(localStorage.getItem("banned_" + username) === "true"){
   window.location.href = "index.html";
 }
 
-document.getElementById("welcome").innerText =
-  `Welcome, ${username}!`;
+document.getElementById("welcome").innerText = `Welcome, ${username}!`;
+
+if(localStorage.getItem("muted_" + username) === "true"){
+  document.getElementById("status").innerText = "⚠ YOU ARE MUTED";
+}
 
 /* ABLY */
 const ably = new Ably.Realtime({
@@ -101,17 +107,13 @@ const ably = new Ably.Realtime({
 const channel = ably.channels.get("chat-me-2");
 
 channel.subscribe("message", msg => {
-  addMessage(msg.data.name, msg.data.text);
-});
-
-function addMessage(name, text){
   const div = document.createElement("div");
   div.className = "msg";
-  div.innerHTML = `<span class="name">${name}:</span> ${text}`;
+  div.innerHTML = `<span class="name">${msg.data.name}:</span> ${msg.data.text}`;
   document.getElementById("messages").appendChild(div);
-}
+});
 
-/* MUTE CHECK */
+/* SEND */
 function sendMsg(){
   if(localStorage.getItem("muted_" + username) === "true"){
     alert("You are muted.");
@@ -131,6 +133,7 @@ function sendMsg(){
   input.value = "";
 }
 
+/* HOME */
 function goHome(){
   window.location.href = "index.html";
 }
