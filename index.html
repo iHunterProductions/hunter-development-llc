@@ -21,16 +21,22 @@
       padding: 30px;
       border-radius: 12px;
       box-shadow: 0 0 20px #00ffff;
-      width: 280px;
+      width: 300px;
     }
 
     h1 {
-      margin-bottom: 15px;
+      margin-bottom: 10px;
+    }
+
+    .debug {
+      font-size: 12px;
+      color: #ff4444;
+      margin-bottom: 10px;
     }
 
     button {
       display: block;
-      width: 220px;
+      width: 240px;
       margin: 10px auto;
       padding: 12px;
       border: none;
@@ -40,10 +46,6 @@
       border-radius: 8px;
       cursor: pointer;
     }
-
-    button:hover {
-      background: #00dddd;
-    }
   </style>
 </head>
 
@@ -52,18 +54,21 @@
 <div class="menu">
   <h1>Hunter Development LLC</h1>
 
-  <!-- TERMS -->
-  <button onclick="alert('Rules and Terms of use to be determined')">
+  <!-- 🔴 DEBUG LINE (IMPORTANT TEST) -->
+  <div class="debug">
+    If you see this text, GitHub updated correctly.
+  </div>
+
+  <button onclick="alert('Terms loaded')">
     Terms of Use
   </button>
 
-  <!-- CHAT -->
   <button onclick="location.href='chat.html'">
     Chat.Me 2
   </button>
 
-  <!-- SCRAMBLE GAME -->
-  <button onclick="location.href='./games/scramble/index.html'">
+  <!-- 🔥 SCRAMBLE BUTTON -->
+  <button onclick="location.href='games/scramble/index.html'">
     Scrambled Word Game
   </button>
 
