@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Tetris Fix Test</title>
+  <title>Tetris</title>
   <style>
     body {
       margin: 0;
@@ -18,22 +18,36 @@
       background: #111;
       border: 2px solid white;
     }
+
+    .wrap {
+      display: flex;
+      gap: 20px;
+    }
+
+    .panel {
+      width: 150px;
+    }
   </style>
 </head>
-
 <body>
 
-<canvas id="game" width="300" height="600"></canvas>
+<div class="wrap">
+  <canvas id="game" width="300" height="600"></canvas>
+
+  <div class="panel">
+    <h2>Score</h2>
+    <div id="score">0</div>
+
+    <h2>Level</h2>
+    <div id="level">1</div>
+
+    <button onclick="location.reload()">Restart</button>
+  </div>
+</div>
 
 <script>
-console.log("Tetris script loaded OK");
-
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
-
-if (!ctx) {
-  alert("Canvas failed to initialize!");
-}
 
 const COLS = 10;
 const ROWS = 20;
@@ -41,21 +55,152 @@ const SIZE = 30;
 
 let board = Array.from({length: ROWS}, () => Array(COLS).fill(0));
 
-function drawTest() {
-  ctx.fillStyle = "red";
+const pieces = [
+  [[1,1,1,1]],
+  [[1,1],[1,1]],
+  [[0,1,0],[1,1,1]],
+  [[1,1,0],[0,1,1]],
+  [[0,1,1],[1,1,0]],
+  [[1,0,0],[1,1,1]],
+  [[0,0,1],[1,1,1]]
+];
+
+const colors = ["cyan","yellow","purple","green","red","blue","orange"];
+
+let score = 0;
+let level = 1;
+
+let dropCounter = 0;
+let dropInterval = 500;
+let lastTime = 0;
+
+function piece() {
+  let id = Math.floor(Math.random()*pieces.length);
+  return {
+    shape: pieces[id],
+    color: colors[id],
+    x: 3,
+    y: 0
+  };
+}
+
+let current = piece();
+
+function drawBoard() {
+  ctx.fillStyle = "#000";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  ctx.fillStyle = "white";
-  ctx.font = "20px Arial";
-  ctx.fillText("TETRIS LOADED", 60, 300);
+  for(let y=0;y<ROWS;y++){
+    for(let x=0;x<COLS;x++){
+      if(board[y][x]){
+        ctx.fillStyle = board[y][x];
+        ctx.fillRect(x*SIZE,y*SIZE,SIZE,SIZE);
+      }
+    }
+  }
 }
 
-function loop() {
-  drawTest();
-  requestAnimationFrame(loop);
+function drawPiece(p){
+  ctx.fillStyle = p.color;
+  for(let y=0;y<p.shape.length;y++){
+    for(let x=0;x<p.shape[y].length;x++){
+      if(p.shape[y][x]){
+        ctx.fillRect((p.x+x)*SIZE,(p.y+y)*SIZE,SIZE,SIZE);
+      }
+    }
+  }
 }
 
-loop();
+function collision(p){
+  for(let y=0;y<p.shape.length;y++){
+    for(let x=0;x<p.shape[y].length;x++){
+      if(p.shape[y][x]){
+        let nx = p.x+x;
+        let ny = p.y+y;
+
+        if(nx<0||nx>=COLS||ny>=ROWS) return true;
+        if(ny>=0 && board[ny][nx]) return true;
+      }
+    }
+  }
+  return false;
+}
+
+function merge(){
+  current.shape.forEach((row,y)=>{
+    row.forEach((val,x)=>{
+      if(val){
+        board[current.y+y][current.x+x] = current.color;
+      }
+    });
+  });
+}
+
+function clearLines(){
+  for(let y=ROWS-1;y>=0;y--){
+    if(board[y].every(cell=>cell)){
+      board.splice(y,1);
+      board.unshift(Array(COLS).fill(0));
+      score += 100;
+      level = Math.floor(score/500)+1;
+
+      document.getElementById("score").innerText = score;
+      document.getElementById("level").innerText = level;
+      y++;
+    }
+  }
+}
+
+function rotate(p){
+  let newShape = p.shape[0].map((_,i)=>
+    p.shape.map(r=>r[i]).reverse()
+  );
+
+  let old = p.shape;
+  p.shape = newShape;
+
+  if(collision(p)) p.shape = old;
+}
+
+function drop(){
+  current.y++;
+  if(collision(current)){
+    current.y--;
+    merge();
+    clearLines();
+    current = piece();
+
+    if(collision(current)){
+      alert("Game Over");
+      location.reload();
+    }
+  }
+  dropCounter = 0;
+}
+
+document.addEventListener("keydown",e=>{
+  if(e.key==="ArrowLeft"){ current.x--; if(collision(current)) current.x++; }
+  if(e.key==="ArrowRight"){ current.x++; if(collision(current)) current.x--; }
+  if(e.key==="ArrowDown"){ drop(); }
+  if(e.key==="ArrowUp"){ rotate(current); }
+});
+
+function update(time=0){
+  let delta = time-lastTime;
+  lastTime=time;
+
+  dropCounter+=delta;
+  if(dropCounter>dropInterval){
+    drop();
+  }
+
+  drawBoard();
+  drawPiece(current);
+
+  requestAnimationFrame(update);
+}
+
+update();
 </script>
 
 </body>
