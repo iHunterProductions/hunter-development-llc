@@ -6,7 +6,7 @@
   <style>
     body {
       margin: 0;
-      background: radial-gradient(circle at center, #050505, #000);
+      background: radial-gradient(circle at center, #05070a, #000);
       color: #00ffff;
       font-family: Arial;
       display: flex;
@@ -20,8 +20,9 @@
       border: 2px solid #00ffff;
       padding: 30px;
       border-radius: 16px;
-      box-shadow: 0 0 25px #00ffff;
-      width: 320px;
+      box-shadow: 0 0 25px rgba(0,255,255,0.6);
+      width: 340px;
+      background: rgba(0,0,0,0.6);
     }
 
     h1 {
@@ -30,53 +31,46 @@
       letter-spacing: 1px;
     }
 
-    /* BUTTON BASE */
+    /* BASE BUTTON (CYAN) */
     button {
       display: block;
       width: 260px;
       margin: 12px auto;
       padding: 14px;
+
       border: none;
-      background: #001f1f;
-      color: #00ffff;
-      font-weight: bold;
       border-radius: 10px;
       cursor: pointer;
 
+      background: #00c8c8;
+      color: #001010;
+      font-weight: bold;
+
       transition: all 0.25s ease;
-      box-shadow: 0 0 5px #00ffff inset;
+
+      box-shadow: 0 0 6px rgba(0, 200, 200, 0.5);
     }
 
-    /* HOVER MAGIC */
+    /* HOVER = DARK BLUE GLOW */
     button:hover {
-      transform: translateY(-5px) scale(1.05);
-      background: #00ffff;
-      color: #000;
+      transform: translateY(-4px) scale(1.05);
 
       box-shadow:
-        0 0 10px #00ffff,
-        0 0 20px #00ffff,
-        0 0 40px #00ffff;
+        0 0 8px #001a33,
+        0 0 16px #00264d,
+        0 0 28px #003366,
+        0 0 45px #004080;
     }
 
     /* CLICK EFFECT */
     button:active {
       transform: scale(0.97);
-      box-shadow: 0 0 10px #00ffff inset;
+      box-shadow: 0 0 10px #001a33 inset;
     }
 
-    /* SPECIAL TOP BUTTON */
+    /* TERMS SPECIAL (optional accent) */
     .terms {
-      background: #002a2a;
-    }
-
-    .terms:hover {
-      box-shadow:
-        0 0 10px #ff00ff,
-        0 0 20px #ff00ff,
-        0 0 40px #ff00ff;
-      background: #ff00ff;
-      color: white;
+      background: #00c8c8;
     }
   </style>
 </head>
