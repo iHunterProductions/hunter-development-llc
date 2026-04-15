@@ -6,29 +6,59 @@
   <style>
     body {
       margin: 0;
+      font-family: Arial;
       background: #000;
       color: #00ffff;
-      font-family: Arial;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
     }
 
-    .box {
-      border: 2px solid #00ffff;
-      padding: 30px;
-      border-radius: 10px;
+    #login, #chat {
+      width: 350px;
       text-align: center;
+      border: 2px solid #00ffff;
+      padding: 20px;
+      border-radius: 10px;
       box-shadow: 0 0 20px #00ffff;
     }
 
-    button {
-      margin-top: 10px;
+    input {
+      width: 90%;
       padding: 10px;
+      margin: 5px 0;
+      text-align: center;
+      border: none;
+      border-radius: 6px;
+    }
+
+    button {
+      width: 95%;
+      padding: 10px;
+      margin-top: 10px;
       background: #00ffff;
       border: none;
+      font-weight: bold;
       cursor: pointer;
+      border-radius: 6px;
+    }
+
+    #messages {
+      height: 250px;
+      overflow-y: auto;
+      border: 1px solid #00ffff;
+      margin: 10px 0;
+      padding: 10px;
+      text-align: left;
+    }
+
+    .msg {
+      margin: 5px 0;
+    }
+
+    .name {
+      color: #ff00ff;
       font-weight: bold;
     }
   </style>
@@ -36,12 +66,82 @@
 
 <body>
 
-<div class="box">
-  <h1>Chat.Me 2</h1>
-  <p>Coming soon...</p>
-
-  <button onclick="location.href='index.html'">Back Home</button>
+<!-- LOGIN -->
+<div id="login">
+  <h2>Chat.Me 2</h2>
+  <p>Enter Password</p>
+  <input id="pass" type="password" placeholder="Password">
+  <button onclick="checkPass()">Enter</button>
 </div>
+
+<!-- CHAT -->
+<div id="chat" style="display:none;">
+  <h2>Live Chat</h2>
+
+  <div id="messages"></div>
+
+  <input id="msg" placeholder="Type message">
+  <button onclick="sendMsg()">Send</button>
+</div>
+
+<!-- ABLY -->
+<script src="https://cdn.ably.io/lib/ably.min-1.js"></script>
+
+<script>
+let channel;
+let username = "";
+
+/* PASSWORD CHECK */
+function checkPass(){
+  let p = document.getElementById("pass").value;
+
+  if(p === "0708"){
+    startChat();
+  } else {
+    alert("Wrong password");
+  }
+}
+
+/* START CHAT */
+function startChat(){
+  document.getElementById("login").style.display = "none";
+  document.getElementById("chat").style.display = "block";
+
+  username = prompt("Enter username:");
+  if(!username) username = "Guest";
+
+  const ably = new Ably.Realtime({
+    key: "PASTE_YOUR_ABLY_API_KEY_HERE"
+  });
+
+  channel = ably.channels.get("chat-me-2");
+
+  channel.subscribe(msg => {
+    let div = document.createElement("div");
+    div.className = "msg";
+    div.innerHTML = `<span class="name">${msg.data.name}:</span> ${msg.data.text}`;
+    document.getElementById("messages").appendChild(div);
+
+    document.getElementById("messages").scrollTop =
+      document.getElementById("messages").scrollHeight;
+  });
+}
+
+/* SEND MESSAGE */
+function sendMsg(){
+  let input = document.getElementById("msg");
+  let text = input.value;
+
+  if(text.trim() === "") return;
+
+  channel.publish("message", {
+    name: username,
+    text: text
+  });
+
+  input.value = "";
+}
+</script>
 
 </body>
 </html>
