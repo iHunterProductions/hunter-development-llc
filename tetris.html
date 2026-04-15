@@ -4,35 +4,45 @@
   <title>Arcade Tetris</title>
 
   <style>
-    body {
+    html, body {
       margin: 0;
+      padding: 0;
+      overflow: hidden; /* prevents any scroll movement */
       background: radial-gradient(circle, #020202, #000);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
       font-family: Arial;
       color: #00ffff;
-      overflow: hidden; /* ✅ prevents page movement */
     }
 
-    /* BACK BUTTON FIXED TOP LEFT */
+    /* =========================
+       ULTRA FIXED BACK BUTTON
+       (always pinned to viewport)
+    ========================= */
     .back {
       position: fixed;
-      top: 10px;
-      left: 10px;
-      z-index: 999;
-      padding: 6px 10px;
+      top: 12px;
+      left: 12px;
+      z-index: 999999;
+
+      padding: 8px 12px;
       border: 2px solid #00ffff;
-      background: transparent;
+      background: rgba(0,0,0,0.85);
       color: #00ffff;
+
       cursor: pointer;
-      border-radius: 8px;
+      border-radius: 10px;
       font-size: 12px;
-      box-shadow: 0 0 8px #00ffff;
+
+      box-shadow: 0 0 10px #00ffff;
+      user-select: none;
     }
 
+    /* CENTER GAME ONLY (NO FLEX ISSUES) */
     .wrap {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+
       display: flex;
       gap: 20px;
       padding: 20px;
@@ -70,20 +80,22 @@
     }
 
     .pauseText {
-      position: absolute;
-      top: 40%;
+      position: fixed;
+      top: 50%;
       left: 50%;
       transform: translate(-50%,-50%);
       font-size: 40px;
       color: #00ffff;
-      text-shadow: 0 0 10px #00ffff;
+      text-shadow: 0 0 12px #00ffff;
       display: none;
+      z-index: 9999;
     }
   </style>
 </head>
 
 <body>
 
+<!-- ALWAYS ON TOP LAYER -->
 <button class="back" onclick="location.href='index.html'">⬅ Back</button>
 
 <div class="pauseText" id="pauseText">PAUSED</div>
@@ -110,18 +122,12 @@
 </div>
 
 <script>
-/* =========================
-   PREVENT PAGE SCROLL (FIX)
-========================= */
 window.addEventListener("keydown", function(e){
   if(["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"," "].includes(e.key)){
-    e.preventDefault();
+    e.preventDefault(); // stops page movement completely
   }
 });
 
-/* =========================
-   CANVAS SETUP
-========================= */
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
@@ -132,9 +138,6 @@ const COLS = 10;
 const ROWS = 20;
 const SIZE = 30;
 
-/* =========================
-   GAME STATE
-========================= */
 let board = Array.from({length: ROWS}, () => Array(COLS).fill(0));
 
 const pieces = [
@@ -167,9 +170,6 @@ let lastTime = 0;
 let paused = false;
 let gameOverFlag = false;
 
-/* =========================
-   PIECES
-========================= */
 function randomPiece(){
   let i = Math.floor(Math.random()*pieces.length);
   return {
@@ -183,9 +183,6 @@ function randomPiece(){
 let current = randomPiece();
 let next = randomPiece();
 
-/* =========================
-   DRAW BOARD
-========================= */
 function drawBoard(){
   ctx.fillStyle = "#050505";
   ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -196,7 +193,6 @@ function drawBoard(){
         ctx.fillStyle = board[y][x];
         ctx.shadowColor = board[y][x];
         ctx.shadowBlur = 10;
-
         ctx.fillRect(x*SIZE,y*SIZE,SIZE,SIZE);
         ctx.shadowBlur = 0;
       }
@@ -204,9 +200,6 @@ function drawBoard(){
   }
 }
 
-/* =========================
-   DRAW PIECE
-========================= */
 function drawPiece(p, c){
   c.fillStyle = p.color;
   c.shadowColor = p.color;
@@ -223,9 +216,6 @@ function drawPiece(p, c){
   c.shadowBlur = 0;
 }
 
-/* =========================
-   COLLISION
-========================= */
 function collide(p){
   for(let y=0;y<p.shape.length;y++){
     for(let x=0;x<p.shape[y].length;x++){
@@ -241,9 +231,6 @@ function collide(p){
   return false;
 }
 
-/* =========================
-   MERGE
-========================= */
 function merge(){
   current.shape.forEach((r,y)=>{
     r.forEach((v,x)=>{
@@ -254,9 +241,6 @@ function merge(){
   });
 }
 
-/* =========================
-   CLEAR LINES
-========================= */
 function clearLines(){
   for(let y=ROWS-1;y>=0;y--){
     if(board[y].every(c=>c)){
@@ -275,9 +259,6 @@ function clearLines(){
   }
 }
 
-/* =========================
-   GAME OVER (SAFE ONCE)
-========================= */
 function gameOver(){
   if(gameOverFlag) return;
 
@@ -289,9 +270,6 @@ function gameOver(){
   },50);
 }
 
-/* =========================
-   DROP
-========================= */
 function drop(){
   if(paused || gameOverFlag) return;
 
@@ -314,60 +292,48 @@ function drop(){
   dropCounter = 0;
 }
 
-/* =========================
-   ROTATE
-========================= */
-function rotate(){
-  let n = current.shape[0].map((_,i)=>
-    current.shape.map(r=>r[i]).reverse()
-  );
-
-  let old = current.shape;
-  current.shape = n;
-
-  if(collide(current)) current.shape = old;
-}
-
-/* =========================
-   PAUSE
-========================= */
 function togglePause(){
   paused = !paused;
   document.getElementById("pauseText").style.display =
     paused ? "block" : "none";
 }
 
-/* =========================
-   INPUT
-========================= */
 document.addEventListener("keydown",e=>{
   if(paused || gameOverFlag) return;
 
   if(e.key==="ArrowLeft"){current.x--;if(collide(current))current.x++;}
   if(e.key==="ArrowRight"){current.x++;if(collide(current))current.x--;}
   if(e.key==="ArrowDown"){drop();}
-  if(e.key==="ArrowUp"){rotate();}
+  if(e.key==="ArrowUp"){
+    let n = current.shape[0].map((_,i)=>
+      current.shape.map(r=>r[i]).reverse()
+    );
+
+    let old = current.shape;
+    current.shape = n;
+    if(collide(current)) current.shape = old;
+  }
 });
 
-/* =========================
-   LOOP
-========================= */
 function loop(time=0){
   if(gameOverFlag) return;
 
   let delta = time-lastTime;
   lastTime = time;
-  dropCounter += delta;
 
-  if(dropCounter > dropInterval){
-    drop();
+  if(!paused){
+    dropCounter += delta;
+
+    if(dropCounter > dropInterval){
+      drop();
+    }
+
+    drawBoard();
+    drawPiece(current, ctx);
+
+    nctx.clearRect(0,0,120,120);
+    drawPiece({...next, x:1, y:1}, nctx);
   }
-
-  drawBoard();
-  drawPiece(current, ctx);
-
-  nctx.clearRect(0,0,120,120);
-  drawPiece({...next, x:1, y:1}, nctx);
 
   requestAnimationFrame(loop);
 }
