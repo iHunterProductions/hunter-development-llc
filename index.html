@@ -42,21 +42,17 @@
       font-weight: bold;
       cursor: pointer;
       border-radius: 6px;
-      transition: 0.25s ease;
+      transition: 0.2s;
     }
 
     button:hover {
-      transform: translateY(-3px) scale(1.03);
-      box-shadow:
-        0 0 10px #001a33,
-        0 0 20px #00264d,
-        0 0 35px #003366;
+      transform: scale(1.03);
+      box-shadow: 0 0 20px #003366;
     }
 
-    #hub {
-      display: none;
-    }
+    #hub { display: none; }
 
+    /* ADMIN UI */
     #adminPanel {
       display: none;
       margin-top: 10px;
@@ -64,27 +60,24 @@
       padding-top: 10px;
     }
 
-    .adminList {
-      max-height: 140px;
-      overflow-y: auto;
+    #userList div {
+      padding: 6px;
+      margin: 4px 0;
       border: 1px solid #00ffff;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    #userList div:hover {
+      background: rgba(0,255,255,0.1);
+      transform: scale(1.02);
+    }
+
+    #actionBox {
+      display: none;
       margin-top: 10px;
-      padding: 5px;
-      text-align: left;
-      font-size: 12px;
-    }
-
-    .row {
-      display: flex;
-      justify-content: space-between;
-      margin: 5px 0;
-    }
-
-    .miniBtn {
-      width: auto;
-      padding: 4px 8px;
-      font-size: 11px;
-      margin-left: 5px;
+      border-top: 1px solid #00ffff;
+      padding-top: 10px;
     }
   </style>
 </head>
@@ -106,10 +99,7 @@
 <div id="hub" class="box">
   <h2 id="welcome"></h2>
 
-  <button onclick="alert('Terms of Use: To be determined')">
-    Terms of Use
-  </button>
-
+  <button onclick="alert('Terms of Use')">Terms of Use</button>
   <button onclick="location.href='chat.html'">Chat.Me 2</button>
   <button onclick="location.href='games/tetris/'">Tetris</button>
   <button onclick="location.href='games/scramble/'">Scramble</button>
@@ -121,7 +111,18 @@
   <!-- ADMIN PANEL -->
   <div id="adminPanel">
     <h4>Users</h4>
-    <div id="userList" class="adminList"></div>
+    <div id="userList"></div>
+
+    <div id="actionBox">
+      <h4 id="selectedUserText">No user selected</h4>
+
+      <button onclick="banUser()">Ban</button>
+      <button onclick="unbanUser()">Unban</button>
+      <button onclick="muteUser()">Mute</button>
+      <button onclick="unmuteUser()">Unmute</button>
+
+      <button onclick="closeAction()">Close</button>
+    </div>
   </div>
 
   <button onclick="logout()">Logout</button>
@@ -130,7 +131,9 @@
 <script>
 const ADMIN = "iHunterDoesProductions";
 
-/* CHECK ADMIN */
+let selectedUser = null;
+
+/* ADMIN CHECK */
 function isAdmin(){
   return localStorage.getItem("currentUser") === ADMIN;
 }
@@ -140,10 +143,10 @@ function signUp(){
   const user = document.getElementById("username").value.trim();
   const pass = document.getElementById("password").value;
 
-  if(!user || !pass) return alert("Enter username + password");
+  if(!user || !pass) return alert("Fill both fields");
 
   if(localStorage.getItem("user_" + user)){
-    return alert("Account already exists");
+    return alert("Account exists");
   }
 
   localStorage.setItem("user_" + user, pass);
@@ -170,14 +173,14 @@ function signIn(){
   const saved = localStorage.getItem("user_" + user);
 
   if(!saved || saved !== pass){
-    return alert("Invalid login");
+    return alert("Wrong login");
   }
 
   localStorage.setItem("currentUser", user);
   loadHub(user);
 }
 
-/* LOAD HUB */
+/* HUB */
 function loadHub(user){
   document.getElementById("login").style.display = "none";
   document.getElementById("hub").style.display = "block";
@@ -189,10 +192,10 @@ function loadHub(user){
   }
 }
 
-/* TOGGLE ADMIN */
+/* ADMIN TOGGLE */
 function toggleAdmin(){
   if(!isAdmin()){
-    alert("Access denied.");
+    alert("Access denied");
     return;
   }
 
@@ -209,37 +212,57 @@ function toggleAdmin(){
 /* LOAD USERS */
 function loadUsers(){
   let users = JSON.parse(localStorage.getItem("users") || "[]");
-  const list = document.getElementById("userList");
 
+  const list = document.getElementById("userList");
   list.innerHTML = "";
 
   users.forEach(u => {
-    const row = document.createElement("div");
-    row.className = "row";
+    const div = document.createElement("div");
+    div.innerText = u;
 
-    row.innerHTML = `
-      <span>${u}</span>
-      <span>
-        <button class="miniBtn" onclick="banUser('${u}')">Ban</button>
-        <button class="miniBtn" onclick="muteUser('${u}')">Mute</button>
-      </span>
-    `;
+    div.onclick = () => selectUser(u);
 
-    list.appendChild(row);
+    list.appendChild(div);
   });
 }
 
-/* ADMIN ACTIONS */
-function banUser(u){
-  if(!isAdmin()) return;
-  localStorage.setItem("banned_" + u, "true");
-  alert(u + " banned");
+/* SELECT USER */
+function selectUser(user){
+  selectedUser = user;
+  document.getElementById("selectedUserText").innerText =
+    "Selected: " + user;
+  document.getElementById("actionBox").style.display = "block";
 }
 
-function muteUser(u){
-  if(!isAdmin()) return;
-  localStorage.setItem("muted_" + u, "true");
-  alert(u + " muted");
+/* CLOSE ACTION BOX */
+function closeAction(){
+  selectedUser = null;
+  document.getElementById("actionBox").style.display = "none";
+}
+
+/* ACTIONS */
+function banUser(){
+  if(!isAdmin() || !selectedUser) return;
+  localStorage.setItem("banned_" + selectedUser, "true");
+  alert(selectedUser + " banned");
+}
+
+function unbanUser(){
+  if(!isAdmin() || !selectedUser) return;
+  localStorage.removeItem("banned_" + selectedUser);
+  alert(selectedUser + " unbanned");
+}
+
+function muteUser(){
+  if(!isAdmin() || !selectedUser) return;
+  localStorage.setItem("muted_" + selectedUser, "true");
+  alert(selectedUser + " muted");
+}
+
+function unmuteUser(){
+  if(!isAdmin() || !selectedUser) return;
+  localStorage.removeItem("muted_" + selectedUser);
+  alert(selectedUser + " unmuted");
 }
 
 /* LOGOUT */
