@@ -1,7 +1,7 @@
-I <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
-  <title>Tetris</title>
+  <title>Neon Tetris</title>
 
   <style>
     body {
@@ -20,16 +20,20 @@ I <!DOCTYPE html>
       gap: 20px;
       border: 2px solid #00ffff;
       padding: 20px;
-      box-shadow: 0 0 20px #00ffff;
+      box-shadow: 0 0 25px #00ffff;
+      background: #000;
     }
 
     canvas {
-      background: #000;
+      background:
+        linear-gradient(90deg, rgba(0,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(0,255,255,0.05) 1px, transparent 1px);
+      background-size: 30px 30px;
       border: 2px solid #00ffff;
     }
 
     .panel {
-      width: 160px;
+      width: 180px;
       text-align: center;
     }
 
@@ -40,13 +44,20 @@ I <!DOCTYPE html>
       background: #00ffff;
       border: none;
       font-weight: bold;
-      cursor: pointer;
       border-radius: 6px;
+      cursor: pointer;
     }
 
     #score {
       font-size: 20px;
       margin: 10px 0;
+    }
+
+    #next {
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px solid #00ffff;
+      height: 80px;
     }
   </style>
 </head>
@@ -57,10 +68,13 @@ I <!DOCTYPE html>
   <canvas id="game" width="300" height="600"></canvas>
 
   <div class="panel">
-    <h2>Tetris</h2>
+    <h2>Neon Tetris</h2>
+
     <div id="score">0</div>
 
-    <button onclick="pauseGame()">Pause</button>
+    <div>Next Piece:</div>
+    <canvas id="next" width="120" height="120"></canvas>
+
     <button onclick="location.reload()">Restart</button>
     <button onclick="location.href='../../index.html'">Home</button>
   </div>
@@ -69,6 +83,9 @@ I <!DOCTYPE html>
 <script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
+
+const nextCanvas = document.getElementById("next");
+const nctx = nextCanvas.getContext("2d");
 
 const COLS = 10;
 const ROWS = 20;
@@ -88,11 +105,11 @@ const pieces = [
 
 const colors = [
   "#00ffff",
+  "#ff00ff",
+  "#00ff88",
   "#ffff00",
-  "#aa00ff",
-  "#00ff00",
-  "#ff0044",
-  "#0066ff",
+  "#ff0055",
+  "#00aaff",
   "#ff8800"
 ];
 
@@ -100,10 +117,12 @@ let score = 0;
 let dropCounter = 0;
 let dropInterval = 500;
 let lastTime = 0;
-let paused = false;
+
+let nextPiece = randomPiece();
+let current = randomPiece();
 
 /* PIECE */
-function newPiece(){
+function randomPiece(){
   let i = Math.floor(Math.random()*pieces.length);
   return {
     shape: pieces[i],
@@ -112,8 +131,6 @@ function newPiece(){
     y: 0
   };
 }
-
-let current = newPiece();
 
 /* COLLISION */
 function collide(p){
@@ -131,6 +148,22 @@ function collide(p){
   return false;
 }
 
+/* GHOST PIECE */
+function getGhost(){
+  let ghost = {
+    shape: current.shape,
+    x: current.x,
+    y: current.y,
+    color: current.color
+  };
+
+  while(!collide(ghost)){
+    ghost.y++;
+  }
+  ghost.y--;
+  return ghost;
+}
+
 /* MERGE */
 function merge(){
   current.shape.forEach((row,y)=>{
@@ -142,7 +175,7 @@ function merge(){
   });
 }
 
-/* CLEAR LINES */
+/* CLEAR */
 function clearLines(){
   for(let y=ROWS-1;y>=0;y--){
     if(board[y].every(v=>v)){
@@ -157,7 +190,10 @@ function clearLines(){
 
 /* SPAWN */
 function spawn(){
-  current = newPiece();
+  current = nextPiece;
+  nextPiece = randomPiece();
+  drawNext();
+
   if(collide(current)){
     alert("Game Over");
     location.reload();
@@ -185,47 +221,73 @@ function rotate(){
 /* DROP */
 function drop(){
   current.y++;
-
   if(collide(current)){
     current.y--;
     merge();
     clearLines();
     spawn();
   }
-
   dropCounter = 0;
 }
 
 /* INPUT */
 document.addEventListener("keydown", e=>{
-  if(paused) return;
-
   if(e.key==="ArrowLeft") move(-1);
   if(e.key==="ArrowRight") move(1);
   if(e.key==="ArrowDown") drop();
   if(e.key==="ArrowUp") rotate();
 });
 
-/* PAUSE */
-function pauseGame(){
-  paused = !paused;
+/* NEXT PIECE DRAW */
+function drawNext(){
+  nctx.fillStyle = "#000";
+  nctx.fillRect(0,0,120,120);
+
+  nctx.fillStyle = nextPiece.color;
+
+  nextPiece.shape.forEach((row,y)=>{
+    row.forEach((v,x)=>{
+      if(v){
+        nctx.fillRect(x*25+20,y*25+20,20,20);
+      }
+    });
+  });
 }
 
-/* DRAW */
+/* DRAW GAME */
 function draw(){
   ctx.fillStyle = "#000";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
+  let ghost = getGhost();
+
+  // ghost piece (light glow)
+  ctx.fillStyle = "rgba(0,255,255,0.2)";
+  ghost.shape.forEach((row,y)=>{
+    row.forEach((v,x)=>{
+      if(v){
+        ctx.fillRect((ghost.x+x)*SIZE,(ghost.y+y)*SIZE,SIZE,SIZE);
+      }
+    });
+  });
+
+  // board
   for(let y=0;y<ROWS;y++){
     for(let x=0;x<COLS;x++){
       if(board[y][x]){
         ctx.fillStyle = board[y][x];
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = board[y][x];
         ctx.fillRect(x*SIZE,y*SIZE,SIZE,SIZE);
       }
     }
   }
 
+  // current piece (neon glow)
   ctx.fillStyle = current.color;
+  ctx.shadowBlur = 15;
+  ctx.shadowColor = current.color;
+
   current.shape.forEach((row,y)=>{
     row.forEach((v,x)=>{
       if(v){
@@ -233,6 +295,8 @@ function draw(){
       }
     });
   });
+
+  ctx.shadowBlur = 0;
 }
 
 /* LOOP */
@@ -240,20 +304,19 @@ function loop(time=0){
   let delta = time - lastTime;
   lastTime = time;
 
-  if(!paused){
-    dropCounter += delta;
-    if(dropCounter > dropInterval){
-      drop();
-    }
-    draw();
+  dropCounter += delta;
+  if(dropCounter > dropInterval){
+    drop();
   }
 
+  draw();
   requestAnimationFrame(loop);
 }
 
+spawn();
+drawNext();
 loop();
 </script>
 
 </body>
 </html>
-
