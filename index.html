@@ -25,13 +25,8 @@
     }
 
     h1 {
-      margin-bottom: 10px;
-    }
-
-    .debug {
-      font-size: 12px;
-      color: #ff4444;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
+      font-size: 22px;
     }
 
     button {
@@ -45,6 +40,12 @@
       font-weight: bold;
       border-radius: 8px;
       cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background: #00dddd;
+      transform: scale(1.02);
     }
   </style>
 </head>
@@ -54,22 +55,24 @@
 <div class="menu">
   <h1>Hunter Development LLC</h1>
 
-  <!-- 🔴 DEBUG LINE (IMPORTANT TEST) -->
-  <div class="debug">
-    If you see this text, GitHub updated correctly.
-  </div>
-
-  <button onclick="alert('Terms loaded')">
+  <!-- TERMS -->
+  <button onclick="alert('Rules and Terms of Use: To be determined')">
     Terms of Use
   </button>
 
+  <!-- CHAT -->
   <button onclick="location.href='chat.html'">
     Chat.Me 2
   </button>
 
-  <!-- 🔥 SCRAMBLE BUTTON -->
-  <button onclick="location.href='games/scramble/index.html'">
+  <!-- SCRAMBLE -->
+  <button onclick="location.href='games/scramble/'">
     Scrambled Word Game
+  </button>
+
+  <!-- TETRIS -->
+  <button onclick="location.href='games/tetris/'">
+    Tetris
   </button>
 
 </div>
