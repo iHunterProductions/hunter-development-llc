@@ -10,32 +10,18 @@
       color: #00ffff;
       font-family: Arial;
       display: flex;
-      flex-direction: column;
+      justify-content: center;
       align-items: center;
-    }
-
-    /* 🔥 FIXED TOP HEADER */
-    .header {
-      position: sticky;
-      top: 0;
-      width: 100%;
-      background: #000;
-      border-bottom: 2px solid #00ffff;
-      text-align: center;
-      padding: 15px;
-      font-size: 20px;
-      font-weight: bold;
-      box-shadow: 0 0 10px #00ffff;
-      z-index: 999;
+      height: 100vh;
     }
 
     .menu {
-      margin-top: 40px;
       text-align: center;
       border: 2px solid #00ffff;
       padding: 30px;
       border-radius: 12px;
       box-shadow: 0 0 20px #00ffff;
+      width: 260px;
     }
 
     button {
@@ -50,25 +36,33 @@
       border-radius: 8px;
       cursor: pointer;
     }
+
+    .terms {
+      background: #00ffff;
+      font-weight: bold;
+    }
   </style>
 </head>
 
 <body>
 
-<!-- 🔥 ALWAYS ON TOP -->
-<div class="header">
-  Terms of Use
-</div>
-
 <div class="menu">
   <h1>Hunter Development LLC</h1>
 
+  <!-- 🔥 TERMS ALWAYS FIRST -->
+  <button class="terms" onclick="openTerms()">Terms of Use</button>
+
+  <!-- OTHER BUTTONS -->
   <button onclick="openChat()">Chat.Me 2</button>
 </div>
 
 <script>
 function openChat(){
   window.location.href = "chat.html";
+}
+
+function openTerms(){
+  alert("Terms of Use: To be determined.");
 }
 </script>
 
