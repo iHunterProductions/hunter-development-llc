@@ -5,44 +5,43 @@
 
   <style>
     body {
-      margin: 0;
-      background: #000;
-      font-family: Arial;
-      color: #00ffff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+      margin:0;
+      background:#000;
+      font-family:Arial;
+      color:#00ffff;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
     }
 
     .box {
-      width: 360px;
-      border: 2px solid #00ffff;
-      padding: 20px;
-      border-radius: 12px;
-      text-align: center;
+      width:360px;
+      border:2px solid #00ffff;
+      padding:20px;
+      text-align:center;
     }
 
-    #chatUI { display:none; }
+    #chatUI{display:none;}
 
-    #messages {
-      height: 240px;
-      overflow-y: auto;
-      border: 1px solid #00ffff;
-      margin: 10px 0;
-      padding: 10px;
-      text-align: left;
+    #messages{
+      height:240px;
+      overflow-y:auto;
+      border:1px solid #00ffff;
+      margin:10px 0;
+      padding:10px;
+      text-align:left;
     }
 
-    button {
-      width: 95%;
-      padding: 10px;
-      margin-top: 8px;
-      background: #00c8c8;
-      border: none;
+    button{
+      width:95%;
+      padding:10px;
+      background:#00c8c8;
+      border:none;
+      margin-top:8px;
     }
 
-    #announcement {
+    #announcement{
       display:none;
       background:#003366;
       padding:10px;
@@ -61,35 +60,26 @@
 
 <div id="chatUI" class="box">
   <h3 id="welcome"></h3>
+
   <div id="announcement"></div>
   <div id="messages"></div>
 
   <input id="msg">
   <button onclick="send()">Send</button>
-  <button onclick="home()">Home</button>
 </div>
 
 <script src="https://cdn.ably.io/lib/ably.min-1.js"></script>
 
 <script>
-const ABLY_KEY = "c-wtfg.-Nr1zw:P37xNKXR2B4E-KOPhClqoUsFYS51FUiFroqUPVr3DZM";
+const ABLY_KEY = "c-wtfg.-Nr1zw:P37xNKXR2B4E-KOPhClqoUsFYS51FUiFroqUPVr3DZM"; // 🔑 SAME KEY
+
 const username = localStorage.getItem("currentUser");
-
-if(!username){
-  location.href="index.html";
-}
-
-if(localStorage.getItem("banned_"+username)==="true"){
-  alert("Banned");
-  location.href="index.html";
-}
-
 let channel;
 
+if(!username) location.href="index.html";
+
 function enter(){
-  if(pass.value !== "0708"){
-    return alert("Wrong password");
-  }
+  if(pass.value!=="0708") return alert("Wrong password");
 
   gate.style.display="none";
   chatUI.style.display="block";
@@ -98,46 +88,38 @@ function enter(){
 }
 
 function start(){
-  welcome.innerText = "Welcome, "+username;
+  welcome.innerText="Welcome, "+username;
 
-  const ably = new Ably.Realtime({ key: ABLY_KEY });
-  channel = ably.channels.get("chat-me-2");
+  const ably=new Ably.Realtime({key:ABLY_KEY});
+  channel=ably.channels.get("chat-me-2");
 
-  channel.subscribe("message", msg=>{
-    messages.innerHTML += `<div><b>${msg.data.name}:</b> ${msg.data.text}</div>`;
+  channel.subscribe("message",m=>{
+    messages.innerHTML+=`<div><b>${m.data.name}:</b> ${m.data.text}</div>`;
   });
 
-  channel.subscribe("announcement", msg=>{
-    showAnnouncement(msg.data.text);
+  channel.subscribe("announcement",m=>{
+    show(m.data.text);
   });
 }
 
 function send(){
-  if(localStorage.getItem("muted_"+username)==="true"){
-    return alert("Muted");
-  }
-
   if(!msg.value.trim()) return;
 
-  channel.publish("message", {
-    name: username,
-    text: msg.value
+  channel.publish("message",{
+    name:username,
+    text:msg.value
   });
 
   msg.value="";
 }
 
-function showAnnouncement(text){
+function show(text){
   announcement.innerText="📢 "+text;
   announcement.style.display="block";
 
   setTimeout(()=>{
     announcement.style.display="none";
   },10000);
-}
-
-function home(){
-  location.href="index.html";
 }
 </script>
 
