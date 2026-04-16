@@ -21,32 +21,9 @@
       padding: 20px;
       border-radius: 12px;
       text-align: center;
-      box-shadow: 0 0 20px #00ffff;
     }
 
-    input {
-      width: 90%;
-      padding: 10px;
-      margin: 6px 0;
-      border: none;
-      border-radius: 6px;
-      text-align: center;
-    }
-
-    button {
-      width: 95%;
-      padding: 10px;
-      background: #00c8c8;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-      border-radius: 6px;
-      margin-top: 8px;
-    }
-
-    #chatUI {
-      display: none;
-    }
+    #chatUI { display:none; }
 
     #messages {
       height: 240px;
@@ -55,132 +32,112 @@
       margin: 10px 0;
       padding: 10px;
       text-align: left;
-      background: rgba(0,255,255,0.05);
     }
 
-    .msg {
-      margin: 5px 0;
+    button {
+      width: 95%;
+      padding: 10px;
+      margin-top: 8px;
+      background: #00c8c8;
+      border: none;
     }
 
-    .name {
-      color: #ff00ff;
-      font-weight: bold;
-    }
-
-    #status {
-      color: red;
-      margin-top: 5px;
+    #announcement {
+      display:none;
+      background:#003366;
+      padding:10px;
+      margin-bottom:8px;
     }
   </style>
 </head>
 
 <body>
 
-<!-- 🔐 PASSWORD GATE -->
 <div id="gate" class="box">
   <h2>Chat.Me 2</h2>
-
-  <input id="chatPass" type="password" placeholder="Enter Chat Password">
-  <button onclick="enterChat()">Enter</button>
+  <input id="pass" placeholder="Password">
+  <button onclick="enter()">Enter</button>
 </div>
 
-<!-- 💬 CHAT UI -->
 <div id="chatUI" class="box">
-  <h2>Chat.Me 2</h2>
-
   <h3 id="welcome"></h3>
-  <div id="status"></div>
-
+  <div id="announcement"></div>
   <div id="messages"></div>
 
-  <input id="msg" placeholder="Type message">
-  <button onclick="sendMsg()">Send</button>
-
-  <button onclick="goHome()">Home</button>
+  <input id="msg">
+  <button onclick="send()">Send</button>
+  <button onclick="home()">Home</button>
 </div>
 
 <script src="https://cdn.ably.io/lib/ably.min-1.js"></script>
 
 <script>
+const ABLY_KEY = "c-wtfg.-Nr1zw:P37xNKXR2B4E-KOPhClqoUsFYS51FUiFroqUPVr3DZM";
 const username = localStorage.getItem("currentUser");
 
 if(!username){
-  alert("Login required");
-  window.location.href = "index.html";
+  location.href="index.html";
 }
 
-if(localStorage.getItem("banned_" + username) === "true"){
-  alert("You are banned.");
-  window.location.href = "index.html";
+if(localStorage.getItem("banned_"+username)==="true"){
+  alert("Banned");
+  location.href="index.html";
 }
-
-const CHAT_PASSWORD = "0708";
 
 let channel;
 
-/* 🔐 PASSWORD CHECK */
-function enterChat(){
-  const pass = document.getElementById("chatPass").value;
-
-  if(pass !== CHAT_PASSWORD){
-    alert("Wrong password");
-    return;
+function enter(){
+  if(pass.value !== "0708"){
+    return alert("Wrong password");
   }
 
-  document.getElementById("gate").style.display = "none";
-  document.getElementById("chatUI").style.display = "block";
+  gate.style.display="none";
+  chatUI.style.display="block";
 
-  startChat();
+  start();
 }
 
-/* 💬 INIT CHAT */
-function startChat(){
-  document.getElementById("welcome").innerText =
-    `Welcome, ${username}!`;
+function start(){
+  welcome.innerText = "Welcome, "+username;
 
-  if(localStorage.getItem("muted_" + username) === "true"){
-    document.getElementById("status").innerText = "⚠ YOU ARE MUTED";
-  }
-
-  const ably = new Ably.Realtime({
-    key: "c-wtfg.-Nr1zw:P37xNKXR2B4E-KOPhClqoUsFYS51FUiFroqUPVr3DZM"
-  });
-
+  const ably = new Ably.Realtime({ key: ABLY_KEY });
   channel = ably.channels.get("chat-me-2");
 
-  channel.subscribe("message", msg => {
-    const div = document.createElement("div");
-    div.className = "msg";
-    div.innerHTML =
-      `<span class="name">${msg.data.name}:</span> ${msg.data.text}`;
+  channel.subscribe("message", msg=>{
+    messages.innerHTML += `<div><b>${msg.data.name}:</b> ${msg.data.text}</div>`;
+  });
 
-    document.getElementById("messages").appendChild(div);
+  channel.subscribe("announcement", msg=>{
+    showAnnouncement(msg.data.text);
   });
 }
 
-/* 🚫 SEND MESSAGE */
-function sendMsg(){
-  if(localStorage.getItem("muted_" + username) === "true"){
-    alert("You are muted.");
-    return;
+function send(){
+  if(localStorage.getItem("muted_"+username)==="true"){
+    return alert("Muted");
   }
 
-  const input = document.getElementById("msg");
-  const text = input.value;
-
-  if(!text.trim()) return;
+  if(!msg.value.trim()) return;
 
   channel.publish("message", {
     name: username,
-    text: text
+    text: msg.value
   });
 
-  input.value = "";
+  msg.value="";
 }
 
-/* 🏠 HOME */
-function goHome(){
-  window.location.href = "index.html";
+function showAnnouncement(text){
+  announcement.innerText="📢 "+text;
+  announcement.style.display="block";
+
+  setTimeout(()=>{
+    announcement.style.display="none";
+  },10000);
+}
+
+function home(){
+  location.href="index.html";
 }
 </script>
 
