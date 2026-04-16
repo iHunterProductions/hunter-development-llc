@@ -5,122 +5,199 @@
 
   <style>
     body {
-      margin:0;
-      background:#000;
-      font-family:Arial;
-      color:#00ffff;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      height:100vh;
+      margin: 0;
+      background: #000;
+      font-family: Arial;
+      color: #00ffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
 
     .box {
-      width:360px;
-      border:2px solid #00ffff;
-      padding:20px;
-      text-align:center;
+      width: 360px;
+      border: 2px solid #00ffff;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(0,255,255,0.3);
     }
 
-    #chatUI{display:none;}
+    /* 🔐 PASSWORD INPUT FIX */
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 8px 0;
 
-    #messages{
-      height:240px;
-      overflow-y:auto;
-      border:1px solid #00ffff;
-      margin:10px 0;
-      padding:10px;
-      text-align:left;
+      background: rgba(0, 0, 0, 0.6);
+      color: #00ffff;
+
+      border: 1px solid #00ffff;
+      border-radius: 6px;
+
+      text-align: center;
+      outline: none;
     }
 
-    button{
-      width:95%;
-      padding:10px;
-      background:#00c8c8;
-      border:none;
-      margin-top:8px;
+    input::placeholder {
+      color: rgba(0,255,255,0.5);
     }
 
-    #announcement{
-      display:none;
-      background:#003366;
-      padding:10px;
-      margin-bottom:8px;
+    #chatUI {
+      display: none;
+    }
+
+    /* 💬 MESSAGE BOX */
+    #messages {
+      height: 240px;
+      overflow-y: auto;
+
+      border: 1px solid #00ffff;
+      margin: 10px 0;
+      padding: 10px;
+
+      text-align: left;
+      background: rgba(0,0,0,0.4);
+    }
+
+    /* 🔘 SEND BUTTON FIX */
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+
+      background: linear-gradient(145deg, #00e6e6, #009999);
+      color: #000;
+
+      border: none;
+      border-radius: 8px;
+
+      font-weight: bold;
+      font-size: 14px;
+      letter-spacing: 0.5px;
+
+      cursor: pointer;
+
+      box-shadow: 0 0 10px rgba(0,255,255,0.4);
+      transition: 0.2s ease;
+    }
+
+    button:hover {
+      transform: scale(1.03);
+      background: #00ffff;
+      box-shadow: 0 0 18px #00ffff;
+    }
+
+    /* 📢 ANNOUNCEMENT */
+    #announcement {
+      display: none;
+      background: #003366;
+      padding: 10px;
+      margin-bottom: 8px;
+      border: 1px solid #00ffff;
+      border-radius: 6px;
+      font-weight: bold;
     }
   </style>
 </head>
 
 <body>
 
+<!-- 🔐 PASSWORD GATE -->
 <div id="gate" class="box">
   <h2>Chat.Me 2</h2>
-  <input id="pass" placeholder="Password">
+
+  <input id="pass" type="password" placeholder="Enter Password">
+
   <button onclick="enter()">Enter</button>
 </div>
 
+<!-- 💬 CHAT -->
 <div id="chatUI" class="box">
   <h3 id="welcome"></h3>
 
   <div id="announcement"></div>
   <div id="messages"></div>
 
-  <input id="msg">
+  <input id="msg" placeholder="Type message...">
   <button onclick="send()">Send</button>
 </div>
 
 <script src="https://cdn.ably.io/lib/ably.min-1.js"></script>
 
 <script>
-const ABLY_KEY = "c-wtfg.-Nr1zw:P37xNKXR2B4E-KOPhClqoUsFYS51FUiFroqUPVr3DZM"; // 🔑 SAME KEY
+const ABLY_KEY = "c-wtfg.-Nr1zw:P37xNKXR2B4E-KOPhClqoUsFYS51FUiFroqUPVr3DZM";
+const CHANNEL = "ChatMeDos";
 
 const username = localStorage.getItem("currentUser");
 let channel;
 
-if(!username) location.href="index.html";
+if(!username) {
+  location.href = "index.html";
+}
 
+/* 🔐 ENTER PASSWORD */
 function enter(){
-  if(pass.value!=="0708") return alert("Wrong password");
+  if(pass.value !== "0708"){
+    return alert("Wrong password");
+  }
 
-  gate.style.display="none";
-  chatUI.style.display="block";
+  gate.style.display = "none";
+  chatUI.style.display = "block";
 
   start();
 }
 
+/* 🚀 START CHAT */
 function start(){
-  welcome.innerText="Welcome, "+username;
+  welcome.innerText = "Welcome, " + username;
 
-  const ably=new Ably.Realtime({key:ABLY_KEY});
-  channel=ably.channels.get("chat-me-2");
+  const ably = new Ably.Realtime({ key: ABLY_KEY });
+  channel = ably.channels.get(CHANNEL);
 
-  channel.subscribe("message",m=>{
-    messages.innerHTML+=`<div><b>${m.data.name}:</b> ${m.data.text}</div>`;
+  /* 💬 MESSAGES */
+  channel.subscribe("message", msg => {
+    messages.innerHTML += `
+      <div><b>${msg.data.name}:</b> ${msg.data.text}</div>
+    `;
+    messages.scrollTop = messages.scrollHeight;
   });
 
-  channel.subscribe("announcement",m=>{
-    show(m.data.text);
+  /* 📢 ANNOUNCEMENTS */
+  channel.subscribe("announcement", msg => {
+    showAnnouncement(msg.data.text);
   });
 }
 
+/* 💬 SEND MESSAGE */
 function send(){
   if(!msg.value.trim()) return;
 
-  channel.publish("message",{
-    name:username,
-    text:msg.value
+  channel.publish("message", {
+    name: username,
+    text: msg.value
   });
 
-  msg.value="";
+  msg.value = "";
 }
 
-function show(text){
-  announcement.innerText="📢 "+text;
-  announcement.style.display="block";
+/* 📢 SHOW ANNOUNCEMENT */
+function showAnnouncement(text){
+  announcement.innerText = "📢 " + text;
+  announcement.style.display = "block";
 
-  setTimeout(()=>{
-    announcement.style.display="none";
-  },10000);
+  setTimeout(() => {
+    announcement.style.display = "none";
+  }, 10000);
 }
+
+/* ⌨️ ENTER KEY SUPPORT */
+document.addEventListener("keydown", e => {
+  if(e.key === "Enter" && chatUI.style.display === "block"){
+    send();
+  }
+});
 </script>
 
 </body>
