@@ -28,8 +28,8 @@
       width: 90%;
       padding: 10px;
       margin: 6px 0;
-      border: none;
       border-radius: 6px;
+      border: none;
       text-align: center;
     }
 
@@ -39,10 +39,10 @@
       margin-top: 10px;
       background: #00c8c8;
       border: none;
-      font-weight: bold;
-      cursor: pointer;
       border-radius: 6px;
-      transition: 0.25s;
+      cursor: pointer;
+      transition: 0.2s;
+      font-weight: bold;
     }
 
     button:hover {
@@ -50,10 +50,11 @@
       box-shadow: 0 0 20px #003366;
     }
 
-    #hub { display: none; }
+    #hub { display:none; }
 
+    /* ADMIN PANEL */
     #adminPanel {
-      display: none;
+      display:none;
       margin-top: 10px;
       border-top: 1px solid #00ffff;
       padding-top: 10px;
@@ -61,34 +62,55 @@
 
     #userList div {
       padding: 6px;
-      margin: 4px 0;
       border: 1px solid #00ffff;
+      margin: 4px 0;
       cursor: pointer;
     }
 
-    #userList div:hover {
-      background: rgba(0,255,255,0.1);
-    }
-
     #actionBox {
-      display: none;
+      display:none;
       margin-top: 10px;
       border-top: 1px solid #00ffff;
       padding-top: 10px;
+    }
+
+    /* AP BUTTON */
+    #adminBtn {
+      position: fixed;
+      bottom: 15px;
+      left: 15px;
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      border: none;
+      background: #00c8c8;
+      font-weight: bold;
+      cursor: pointer;
+      display: none;
+      box-shadow: 0 0 10px #00ffff;
+      z-index: 9999;
+    }
+
+    #adminBtn:hover {
+      transform: scale(1.15);
+      box-shadow: 0 0 25px #003366;
     }
   </style>
 </head>
 
 <body>
 
+<!-- LOGIN -->
 <div id="login" class="box">
   <h2>Hunter Arcade</h2>
   <input id="username" placeholder="Username">
   <input id="password" type="password" placeholder="Password">
+
   <button onclick="signUp()">Sign Up</button>
   <button onclick="signIn()">Sign In</button>
 </div>
 
+<!-- HUB -->
 <div id="hub" class="box">
   <h2 id="welcome"></h2>
 
@@ -97,16 +119,12 @@
   <button onclick="location.href='games/tetris/'">Tetris</button>
   <button onclick="location.href='games/scramble/'">Scramble</button>
 
-  <button id="adminBtn" onclick="toggleAdmin()" style="display:none;">
-    Admin Panel
-  </button>
-
   <div id="adminPanel">
     <h4>Users</h4>
     <div id="userList"></div>
 
     <div id="actionBox">
-      <h4 id="selectedUserText">No user selected</h4>
+      <h4 id="selectedUserText"></h4>
 
       <button onclick="banUser()">Ban</button>
       <button onclick="unbanUser()">Unban</button>
@@ -117,15 +135,16 @@
       <button onclick="closeAction()">Close</button>
     </div>
   </div>
-
-  <button onclick="logout()">Logout</button>
 </div>
+
+<!-- AP BUTTON -->
+<button id="adminBtn" onclick="toggleAdmin()">AP</button>
 
 <script src="https://cdn.ably.io/lib/ably.min-1.js"></script>
 
 <script>
 const ADMIN = "iHunterDoesProductions";
-const ABLY_KEY = "c-wtfg.-Nr1zw:P37xNKXR2B4E-KOPhClqoUsFYS51FUiFroqUPVr3DZM";
+const ABLY_KEY = "c-wtfg.-Nr1zw:P37xNKXR2B4E-KOPhClqoUsFYS51FUiFroqUPVr3DZM"; // 🔑 PUT YOUR KEY HERE
 
 let selectedUser = null;
 
@@ -133,119 +152,113 @@ function isAdmin(){
   return localStorage.getItem("currentUser") === ADMIN;
 }
 
-/* LOGIN SYSTEM */
+/* LOGIN */
 function signUp(){
-  const user = username.value.trim();
-  const pass = password.value;
+  const u = username.value.trim();
+  const p = password.value;
 
-  if(!user || !pass) return alert("Fill both");
+  if(!u || !p) return alert("Fill all");
 
-  if(localStorage.getItem("user_"+user)){
-    return alert("Exists");
-  }
+  localStorage.setItem("user_"+u, p);
 
-  localStorage.setItem("user_"+user, pass);
-
-  let users = JSON.parse(localStorage.getItem("users") || "[]");
-  if(!users.includes(user)){
-    users.push(user);
+  let users = JSON.parse(localStorage.getItem("users")||"[]");
+  if(!users.includes(u)){
+    users.push(u);
     localStorage.setItem("users", JSON.stringify(users));
   }
 
-  localStorage.setItem("currentUser", user);
-  loadHub(user);
+  localStorage.setItem("currentUser", u);
+  loadHub(u);
 }
 
 function signIn(){
-  const user = username.value.trim();
-  const pass = password.value;
+  const u = username.value.trim();
+  const p = password.value;
 
-  if(localStorage.getItem("banned_"+user) === "true"){
-    return alert("You are banned");
+  if(localStorage.getItem("banned_"+u)==="true"){
+    return alert("Banned");
   }
 
-  if(localStorage.getItem("user_"+user) !== pass){
+  if(localStorage.getItem("user_"+u)!==p){
     return alert("Wrong login");
   }
 
-  localStorage.setItem("currentUser", user);
-  loadHub(user);
+  localStorage.setItem("currentUser", u);
+  loadHub(u);
 }
 
-function loadHub(user){
-  login.style.display = "none";
-  hub.style.display = "block";
+function loadHub(u){
+  login.style.display="none";
+  hub.style.display="block";
 
-  welcome.innerText = "Welcome, " + user;
+  welcome.innerText="Welcome, "+u;
 
   if(isAdmin()){
-    adminBtn.style.display = "block";
+    adminBtn.style.display="block";
   }
 }
 
-/* ADMIN */
+/* ADMIN PANEL */
 function toggleAdmin(){
   if(!isAdmin()) return alert("Denied");
 
   adminPanel.style.display =
-    adminPanel.style.display === "block" ? "none" : "block";
+    adminPanel.style.display==="block" ? "none":"block";
 
-  if(adminPanel.style.display === "block") loadUsers();
+  if(adminPanel.style.display==="block"){
+    loadUsers();
+  }
 }
 
 function loadUsers(){
-  let users = JSON.parse(localStorage.getItem("users") || "[]");
-  userList.innerHTML = "";
+  let users = JSON.parse(localStorage.getItem("users")||"[]");
+  userList.innerHTML="";
 
-  users.forEach(u => {
-    let div = document.createElement("div");
-    div.innerText = u;
-    div.onclick = () => selectUser(u);
+  users.forEach(u=>{
+    let div=document.createElement("div");
+    div.innerText=u;
+    div.onclick=()=>selectUser(u);
     userList.appendChild(div);
   });
 }
 
 function selectUser(u){
-  selectedUser = u;
-  selectedUserText.innerText = "Selected: " + u;
-  actionBox.style.display = "block";
+  selectedUser=u;
+  selectedUserText.innerText="Selected: "+u;
+  actionBox.style.display="block";
 }
 
 function closeAction(){
-  selectedUser = null;
-  actionBox.style.display = "none";
+  selectedUser=null;
+  actionBox.style.display="none";
 }
 
 /* MODERATION */
 function banUser(){
-  if(!selectedUser || !isAdmin()) return;
+  if(!isAdmin()||!selectedUser) return;
   localStorage.setItem("banned_"+selectedUser,"true");
-  alert(selectedUser+" banned");
 }
 
 function unbanUser(){
-  if(!selectedUser || !isAdmin()) return;
+  if(!isAdmin()||!selectedUser) return;
   localStorage.removeItem("banned_"+selectedUser);
-  alert(selectedUser+" unbanned");
 }
 
 function muteUser(){
-  if(!selectedUser || !isAdmin()) return;
+  if(!isAdmin()||!selectedUser) return;
   localStorage.setItem("muted_"+selectedUser,"true");
-  alert(selectedUser+" muted");
 }
 
 function unmuteUser(){
-  if(!selectedUser || !isAdmin()) return;
+  if(!isAdmin()||!selectedUser) return;
   localStorage.removeItem("muted_"+selectedUser);
-  alert(selectedUser+" unmuted");
 }
 
-/* ANNOUNCEMENT */
+/* GLOBAL ANNOUNCEMENT */
 function sendAnnouncement(){
   if(!isAdmin()) return;
 
-  let msg = prompt("Message:");
+  const msg = prompt("Message:");
   if(!msg) return;
 
   const ably = new Ably.Realtime({ key: ABLY_KEY });
@@ -254,14 +267,9 @@ function sendAnnouncement(){
   channel.publish("announcement", { text: msg });
 }
 
-/* LOGOUT */
-function logout(){
-  localStorage.removeItem("currentUser");
-  location.reload();
-}
-
-window.onload = () => {
-  const u = localStorage.getItem("currentUser");
+/* INIT */
+window.onload=()=>{
+  const u=localStorage.getItem("currentUser");
   if(u) loadHub(u);
 };
 </script>
