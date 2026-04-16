@@ -42,7 +42,7 @@
       font-weight: bold;
       cursor: pointer;
       border-radius: 6px;
-      transition: 0.2s;
+      transition: 0.25s;
     }
 
     button:hover {
@@ -52,7 +52,6 @@
 
     #hub { display: none; }
 
-    /* ADMIN UI */
     #adminPanel {
       display: none;
       margin-top: 10px;
@@ -65,12 +64,10 @@
       margin: 4px 0;
       border: 1px solid #00ffff;
       cursor: pointer;
-      transition: 0.2s;
     }
 
     #userList div:hover {
       background: rgba(0,255,255,0.1);
-      transform: scale(1.02);
     }
 
     #actionBox {
@@ -84,18 +81,14 @@
 
 <body>
 
-<!-- LOGIN -->
 <div id="login" class="box">
   <h2>Hunter Arcade</h2>
-
   <input id="username" placeholder="Username">
   <input id="password" type="password" placeholder="Password">
-
   <button onclick="signUp()">Sign Up</button>
   <button onclick="signIn()">Sign In</button>
 </div>
 
-<!-- HUB -->
 <div id="hub" class="box">
   <h2 id="welcome"></h2>
 
@@ -108,7 +101,6 @@
     Admin Panel
   </button>
 
-  <!-- ADMIN PANEL -->
   <div id="adminPanel">
     <h4>Users</h4>
     <div id="userList"></div>
@@ -120,6 +112,7 @@
       <button onclick="unbanUser()">Unban</button>
       <button onclick="muteUser()">Mute</button>
       <button onclick="unmuteUser()">Unmute</button>
+      <button onclick="sendAnnouncement()">📢 Global Message</button>
 
       <button onclick="closeAction()">Close</button>
     </div>
@@ -128,28 +121,30 @@
   <button onclick="logout()">Logout</button>
 </div>
 
+<script src="https://cdn.ably.io/lib/ably.min-1.js"></script>
+
 <script>
 const ADMIN = "iHunterDoesProductions";
+const ABLY_KEY = "c-wtfg.-Nr1zw:P37xNKXR2B4E-KOPhClqoUsFYS51FUiFroqUPVr3DZM";
 
 let selectedUser = null;
 
-/* ADMIN CHECK */
 function isAdmin(){
   return localStorage.getItem("currentUser") === ADMIN;
 }
 
-/* SIGN UP */
+/* LOGIN SYSTEM */
 function signUp(){
-  const user = document.getElementById("username").value.trim();
-  const pass = document.getElementById("password").value;
+  const user = username.value.trim();
+  const pass = password.value;
 
-  if(!user || !pass) return alert("Fill both fields");
+  if(!user || !pass) return alert("Fill both");
 
-  if(localStorage.getItem("user_" + user)){
-    return alert("Account exists");
+  if(localStorage.getItem("user_"+user)){
+    return alert("Exists");
   }
 
-  localStorage.setItem("user_" + user, pass);
+  localStorage.setItem("user_"+user, pass);
 
   let users = JSON.parse(localStorage.getItem("users") || "[]");
   if(!users.includes(user)){
@@ -161,18 +156,15 @@ function signUp(){
   loadHub(user);
 }
 
-/* SIGN IN */
 function signIn(){
-  const user = document.getElementById("username").value.trim();
-  const pass = document.getElementById("password").value;
+  const user = username.value.trim();
+  const pass = password.value;
 
-  if(localStorage.getItem("banned_" + user) === "true"){
-    return alert("You are banned.");
+  if(localStorage.getItem("banned_"+user) === "true"){
+    return alert("You are banned");
   }
 
-  const saved = localStorage.getItem("user_" + user);
-
-  if(!saved || saved !== pass){
+  if(localStorage.getItem("user_"+user) !== pass){
     return alert("Wrong login");
   }
 
@@ -180,89 +172,86 @@ function signIn(){
   loadHub(user);
 }
 
-/* HUB */
 function loadHub(user){
-  document.getElementById("login").style.display = "none";
-  document.getElementById("hub").style.display = "block";
+  login.style.display = "none";
+  hub.style.display = "block";
 
-  document.getElementById("welcome").innerText = `Welcome, ${user}!`;
+  welcome.innerText = "Welcome, " + user;
 
   if(isAdmin()){
-    document.getElementById("adminBtn").style.display = "block";
+    adminBtn.style.display = "block";
   }
 }
 
-/* ADMIN TOGGLE */
+/* ADMIN */
 function toggleAdmin(){
-  if(!isAdmin()){
-    alert("Access denied");
-    return;
-  }
+  if(!isAdmin()) return alert("Denied");
 
-  const panel = document.getElementById("adminPanel");
+  adminPanel.style.display =
+    adminPanel.style.display === "block" ? "none" : "block";
 
-  panel.style.display =
-    panel.style.display === "block" ? "none" : "block";
-
-  if(panel.style.display === "block"){
-    loadUsers();
-  }
+  if(adminPanel.style.display === "block") loadUsers();
 }
 
-/* LOAD USERS */
 function loadUsers(){
   let users = JSON.parse(localStorage.getItem("users") || "[]");
-
-  const list = document.getElementById("userList");
-  list.innerHTML = "";
+  userList.innerHTML = "";
 
   users.forEach(u => {
-    const div = document.createElement("div");
+    let div = document.createElement("div");
     div.innerText = u;
-
     div.onclick = () => selectUser(u);
-
-    list.appendChild(div);
+    userList.appendChild(div);
   });
 }
 
-/* SELECT USER */
-function selectUser(user){
-  selectedUser = user;
-  document.getElementById("selectedUserText").innerText =
-    "Selected: " + user;
-  document.getElementById("actionBox").style.display = "block";
+function selectUser(u){
+  selectedUser = u;
+  selectedUserText.innerText = "Selected: " + u;
+  actionBox.style.display = "block";
 }
 
-/* CLOSE ACTION BOX */
 function closeAction(){
   selectedUser = null;
-  document.getElementById("actionBox").style.display = "none";
+  actionBox.style.display = "none";
 }
 
-/* ACTIONS */
+/* MODERATION */
 function banUser(){
-  if(!isAdmin() || !selectedUser) return;
-  localStorage.setItem("banned_" + selectedUser, "true");
-  alert(selectedUser + " banned");
+  if(!selectedUser || !isAdmin()) return;
+  localStorage.setItem("banned_"+selectedUser,"true");
+  alert(selectedUser+" banned");
 }
 
 function unbanUser(){
-  if(!isAdmin() || !selectedUser) return;
-  localStorage.removeItem("banned_" + selectedUser);
-  alert(selectedUser + " unbanned");
+  if(!selectedUser || !isAdmin()) return;
+  localStorage.removeItem("banned_"+selectedUser);
+  alert(selectedUser+" unbanned");
 }
 
 function muteUser(){
-  if(!isAdmin() || !selectedUser) return;
-  localStorage.setItem("muted_" + selectedUser, "true");
-  alert(selectedUser + " muted");
+  if(!selectedUser || !isAdmin()) return;
+  localStorage.setItem("muted_"+selectedUser,"true");
+  alert(selectedUser+" muted");
 }
 
 function unmuteUser(){
-  if(!isAdmin() || !selectedUser) return;
-  localStorage.removeItem("muted_" + selectedUser);
-  alert(selectedUser + " unmuted");
+  if(!selectedUser || !isAdmin()) return;
+  localStorage.removeItem("muted_"+selectedUser);
+  alert(selectedUser+" unmuted");
+}
+
+/* ANNOUNCEMENT */
+function sendAnnouncement(){
+  if(!isAdmin()) return;
+
+  let msg = prompt("Message:");
+  if(!msg) return;
+
+  const ably = new Ably.Realtime({ key: ABLY_KEY });
+  const channel = ably.channels.get("chat-me-2");
+
+  channel.publish("announcement", { text: msg });
 }
 
 /* LOGOUT */
@@ -271,10 +260,9 @@ function logout(){
   location.reload();
 }
 
-/* AUTO LOGIN */
 window.onload = () => {
-  const saved = localStorage.getItem("currentUser");
-  if(saved) loadHub(saved);
+  const u = localStorage.getItem("currentUser");
+  if(u) loadHub(u);
 };
 </script>
 
