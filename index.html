@@ -42,8 +42,8 @@
       border-radius: 8px;
       cursor: pointer;
       font-weight: bold;
-      transition: 0.2s;
       color: #001818;
+      transition: 0.2s;
     }
 
     button:hover {
@@ -51,31 +51,31 @@
       box-shadow: 0 0 20px #003366;
     }
 
-    #hub { display:none; }
+    #hub { display: none; }
 
     /* ADMIN PANEL */
     #adminPanel {
-      display:none;
-      margin-top:10px;
-      border-top:1px solid #00ffff;
-      padding-top:10px;
+      display: none;
+      margin-top: 10px;
+      border-top: 1px solid #00ffff;
+      padding-top: 10px;
     }
 
     #userList div {
-      padding:6px;
-      margin:4px 0;
-      border:1px solid #00ffff;
-      cursor:pointer;
+      padding: 6px;
+      margin: 4px 0;
+      border: 1px solid #00ffff;
+      cursor: pointer;
     }
 
     #actionBox {
-      display:none;
-      margin-top:10px;
-      border-top:1px solid #00ffff;
-      padding-top:10px;
+      display: none;
+      margin-top: 10px;
+      border-top: 1px solid #00ffff;
+      padding-top: 10px;
     }
 
-    /* 🔘 FLOATING AP BUTTON */
+    /* 🔘 AP BUTTON */
     #adminBtn {
       position: fixed;
       bottom: 15px;
@@ -120,6 +120,8 @@
   <button onclick="location.href='games/tetris/'">Tetris</button>
   <button onclick="location.href='games/scramble/'">Scramble</button>
 
+  <button onclick="logout()">Logout</button>
+
   <div id="adminPanel">
     <h4>Users</h4>
     <div id="userList"></div>
@@ -132,8 +134,6 @@
       <button onclick="muteUser()">Mute</button>
       <button onclick="unmuteUser()">Unmute</button>
 
-      <button onclick="sendAnnouncement()">📢 Global Announcement</button>
-
       <button onclick="closeAction()">Close</button>
     </div>
   </div>
@@ -142,64 +142,67 @@
 <!-- AP BUTTON -->
 <button id="adminBtn" onclick="toggleAdmin()">AP</button>
 
-<script src="https://cdn.ably.io/lib/ably.min-1.js"></script>
-
 <script>
 
 const ADMIN = "iHunterDoesProductions";
-const ABLY_KEY = "c-wtfg.-Nr1zw:P37xNKXR2B4E-KOPhClqoUsFYS51FUiFroqUPVr3DZM";
-const CHANNEL = "ChatMeDos";
-
 let selectedUser = null;
 
+/* CHECK ADMIN */
 function isAdmin(){
   return localStorage.getItem("currentUser") === ADMIN;
 }
 
 /* LOGIN */
 function signUp(){
-  const u=username.value.trim();
-  const p=password.value;
+  const u = username.value.trim();
+  const p = password.value;
 
-  if(!u||!p) return;
+  if(!u || !p) return;
 
-  localStorage.setItem("user_"+u,p);
+  localStorage.setItem("user_"+u, p);
 
-  let users=JSON.parse(localStorage.getItem("users")||"[]");
+  let users = JSON.parse(localStorage.getItem("users") || "[]");
   if(!users.includes(u)){
     users.push(u);
-    localStorage.setItem("users",JSON.stringify(users));
+    localStorage.setItem("users", JSON.stringify(users));
   }
 
-  localStorage.setItem("currentUser",u);
+  localStorage.setItem("currentUser", u);
   loadHub(u);
 }
 
 function signIn(){
-  const u=username.value.trim();
-  const p=password.value;
+  const u = username.value.trim();
+  const p = password.value;
 
-  if(localStorage.getItem("banned_"+u)==="true"){
-    return alert("Banned");
+  if(localStorage.getItem("banned_"+u) === "true"){
+    return alert("You are banned");
   }
 
-  if(localStorage.getItem("user_"+u)!==p){
+  if(localStorage.getItem("user_"+u) !== p){
     return alert("Wrong password");
   }
 
-  localStorage.setItem("currentUser",u);
+  localStorage.setItem("currentUser", u);
   loadHub(u);
 }
 
+/* HUB */
 function loadHub(u){
-  login.style.display="none";
-  hub.style.display="block";
+  login.style.display = "none";
+  hub.style.display = "block";
 
-  welcome.innerText="Welcome, "+u;
+  welcome.innerText = "Welcome, " + u;
 
   if(isAdmin()){
-    adminBtn.style.display="block";
+    adminBtn.style.display = "block";
   }
+}
+
+/* LOGOUT */
+function logout(){
+  localStorage.removeItem("currentUser");
+  location.reload();
 }
 
 /* ADMIN PANEL */
@@ -207,77 +210,60 @@ function toggleAdmin(){
   if(!isAdmin()) return alert("Denied");
 
   adminPanel.style.display =
-    adminPanel.style.display==="block" ? "none" : "block";
+    adminPanel.style.display === "block" ? "none" : "block";
 
-  if(adminPanel.style.display==="block"){
+  if(adminPanel.style.display === "block"){
     loadUsers();
   }
 }
 
 function loadUsers(){
-  let users=JSON.parse(localStorage.getItem("users")||"[]");
-  userList.innerHTML="";
+  let users = JSON.parse(localStorage.getItem("users") || "[]");
+  userList.innerHTML = "";
 
-  users.forEach(u=>{
-    let div=document.createElement("div");
-    div.innerText=u;
-    div.onclick=()=>selectUser(u);
+  users.forEach(u => {
+    let div = document.createElement("div");
+    div.innerText = u;
+    div.onclick = () => selectUser(u);
     userList.appendChild(div);
   });
 }
 
 function selectUser(u){
-  selectedUser=u;
-  selectedUserText.innerText="Selected: "+u;
-  actionBox.style.display="block";
+  selectedUser = u;
+  selectedUserText.innerText = "Selected: " + u;
+  actionBox.style.display = "block";
 }
 
 function closeAction(){
-  selectedUser=null;
-  actionBox.style.display="none";
+  selectedUser = null;
+  actionBox.style.display = "none";
 }
 
 /* MODERATION */
 function banUser(){
   if(!selectedUser) return;
-  localStorage.setItem("banned_"+selectedUser,"true");
+  localStorage.setItem("banned_" + selectedUser, "true");
 }
 
 function unbanUser(){
   if(!selectedUser) return;
-  localStorage.removeItem("banned_"+selectedUser);
+  localStorage.removeItem("banned_" + selectedUser);
 }
 
 function muteUser(){
   if(!selectedUser) return;
-  localStorage.setItem("muted_"+selectedUser,"true");
+  localStorage.setItem("muted_" + selectedUser, "true");
 }
 
 function unmuteUser(){
   if(!selectedUser) return;
-  localStorage.removeItem("muted_"+selectedUser);
-}
-
-/* 🌐 GLOBAL ANNOUNCEMENT (FIXED) */
-function sendAnnouncement(){
-  if(!isAdmin()) return;
-
-  const msg = prompt("Enter announcement:");
-  if(!msg) return;
-
-  const ably = new Ably.Realtime({ key: ABLY_KEY });
-  const channel = ably.channels.get(CHANNEL);
-
-  channel.publish("announcement", {
-    text: msg
-  });
-
-  alert("Sent!");
+  localStorage.removeItem("muted_" + selectedUser);
 }
 
 /* INIT */
-window.onload=()=>{
-  const u=localStorage.getItem("currentUser");
+window.onload = () => {
+  const u = localStorage.getItem("currentUser");
   if(u) loadHub(u);
 };
 
