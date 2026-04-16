@@ -21,10 +21,23 @@
       padding: 20px;
       border-radius: 12px;
       text-align: center;
-      box-shadow: 0 0 20px rgba(0,255,255,0.3);
+      box-shadow: 0 0 20px rgba(0,255,255,0.25);
     }
 
-    /* 🔐 PASSWORD INPUT FIX */
+    #chatUI {
+      display: none;
+    }
+
+    #messages {
+      height: 260px;
+      overflow-y: auto;
+      border: 1px solid #00ffff;
+      margin: 10px 0;
+      padding: 10px;
+      text-align: left;
+      background: rgba(0,0,0,0.4);
+    }
+
     input {
       width: 90%;
       padding: 10px;
@@ -44,24 +57,6 @@
       color: rgba(0,255,255,0.5);
     }
 
-    #chatUI {
-      display: none;
-    }
-
-    /* 💬 MESSAGE BOX */
-    #messages {
-      height: 240px;
-      overflow-y: auto;
-
-      border: 1px solid #00ffff;
-      margin: 10px 0;
-      padding: 10px;
-
-      text-align: left;
-      background: rgba(0,0,0,0.4);
-    }
-
-    /* 🔘 SEND BUTTON FIX */
     button {
       width: 100%;
       padding: 12px;
@@ -74,30 +69,15 @@
       border-radius: 8px;
 
       font-weight: bold;
-      font-size: 14px;
-      letter-spacing: 0.5px;
-
       cursor: pointer;
 
-      box-shadow: 0 0 10px rgba(0,255,255,0.4);
-      transition: 0.2s ease;
+      transition: 0.2s;
     }
 
     button:hover {
       transform: scale(1.03);
       background: #00ffff;
-      box-shadow: 0 0 18px #00ffff;
-    }
-
-    /* 📢 ANNOUNCEMENT */
-    #announcement {
-      display: none;
-      background: #003366;
-      padding: 10px;
-      margin-bottom: 8px;
-      border: 1px solid #00ffff;
-      border-radius: 6px;
-      font-weight: bold;
+      box-shadow: 0 0 15px #00ffff;
     }
   </style>
 </head>
@@ -117,7 +97,6 @@
 <div id="chatUI" class="box">
   <h3 id="welcome"></h3>
 
-  <div id="announcement"></div>
   <div id="messages"></div>
 
   <input id="msg" placeholder="Type message...">
@@ -127,17 +106,20 @@
 <script src="https://cdn.ably.io/lib/ably.min-1.js"></script>
 
 <script>
+
 const ABLY_KEY = "c-wtfg.-Nr1zw:P37xNKXR2B4E-KOPhClqoUsFYS51FUiFroqUPVr3DZM";
 const CHANNEL = "ChatMeDos";
 
 const username = localStorage.getItem("currentUser");
-let channel;
 
-if(!username) {
+if(!username){
   location.href = "index.html";
 }
 
-/* 🔐 ENTER PASSWORD */
+let ably;
+let channel;
+
+/* 🔐 PASSWORD */
 function enter(){
   if(pass.value !== "0708"){
     return alert("Wrong password");
@@ -149,24 +131,22 @@ function enter(){
   start();
 }
 
-/* 🚀 START CHAT */
+/* 🚀 START ABLY */
 function start(){
   welcome.innerText = "Welcome, " + username;
 
-  const ably = new Ably.Realtime({ key: ABLY_KEY });
+  ably = new Ably.Realtime({ key: ABLY_KEY });
   channel = ably.channels.get(CHANNEL);
 
-  /* 💬 MESSAGES */
+  /* RECEIVE MESSAGES */
   channel.subscribe("message", msg => {
-    messages.innerHTML += `
-      <div><b>${msg.data.name}:</b> ${msg.data.text}</div>
-    `;
-    messages.scrollTop = messages.scrollHeight;
+    addMessage(msg.data.name, msg.data.text);
   });
 
-  /* 📢 ANNOUNCEMENTS */
-  channel.subscribe("announcement", msg => {
-    showAnnouncement(msg.data.text);
+  loadHistory();
+
+  msg.addEventListener("keydown", e => {
+    if(e.key === "Enter") send();
   });
 }
 
@@ -182,22 +162,39 @@ function send(){
   msg.value = "";
 }
 
-/* 📢 SHOW ANNOUNCEMENT */
-function showAnnouncement(text){
-  announcement.innerText = "📢 " + text;
-  announcement.style.display = "block";
+/* 📥 DISPLAY MESSAGE */
+function addMessage(name, text){
+  const div = document.createElement("div");
+  div.innerHTML = `<b>${name}:</b> ${text}`;
 
-  setTimeout(() => {
-    announcement.style.display = "none";
-  }, 10000);
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+
+  saveToHistory(name, text);
 }
 
-/* ⌨️ ENTER KEY SUPPORT */
-document.addEventListener("keydown", e => {
-  if(e.key === "Enter" && chatUI.style.display === "block"){
-    send();
-  }
-});
+/* 💾 LOCAL BACKUP HISTORY */
+function saveToHistory(name, text){
+  let history = JSON.parse(localStorage.getItem("chat_history") || "[]");
+
+  history.push({ name, text });
+
+  localStorage.setItem("chat_history", JSON.stringify(history.slice(-50)));
+}
+
+/* 📥 LOAD HISTORY */
+function loadHistory(){
+  let history = JSON.parse(localStorage.getItem("chat_history") || "[]");
+
+  history.forEach(m => {
+    const div = document.createElement("div");
+    div.innerHTML = `<b>${m.name}:</b> ${m.text}`;
+    messages.appendChild(div);
+  });
+
+  messages.scrollTop = messages.scrollHeight;
+}
+
 </script>
 
 </body>
