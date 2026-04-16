@@ -28,8 +28,8 @@
       width: 90%;
       padding: 10px;
       margin: 6px 0;
-      border-radius: 6px;
       border: none;
+      border-radius: 6px;
       text-align: center;
     }
 
@@ -39,10 +39,11 @@
       margin-top: 10px;
       background: #00c8c8;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
-      transition: 0.2s;
       font-weight: bold;
+      transition: 0.2s;
+      color: #001818;
     }
 
     button:hover {
@@ -55,26 +56,26 @@
     /* ADMIN PANEL */
     #adminPanel {
       display:none;
-      margin-top: 10px;
-      border-top: 1px solid #00ffff;
-      padding-top: 10px;
+      margin-top:10px;
+      border-top:1px solid #00ffff;
+      padding-top:10px;
     }
 
     #userList div {
-      padding: 6px;
-      border: 1px solid #00ffff;
-      margin: 4px 0;
-      cursor: pointer;
+      padding:6px;
+      margin:4px 0;
+      border:1px solid #00ffff;
+      cursor:pointer;
     }
 
     #actionBox {
       display:none;
-      margin-top: 10px;
-      border-top: 1px solid #00ffff;
-      padding-top: 10px;
+      margin-top:10px;
+      border-top:1px solid #00ffff;
+      padding-top:10px;
     }
 
-    /* AP BUTTON */
+    /* 🔘 FLOATING AP BUTTON */
     #adminBtn {
       position: fixed;
       bottom: 15px;
@@ -103,6 +104,7 @@
 <!-- LOGIN -->
 <div id="login" class="box">
   <h2>Hunter Arcade</h2>
+
   <input id="username" placeholder="Username">
   <input id="password" type="password" placeholder="Password">
 
@@ -114,7 +116,6 @@
 <div id="hub" class="box">
   <h2 id="welcome"></h2>
 
-  <button onclick="alert('Terms of Use')">Terms of Use</button>
   <button onclick="location.href='chat.html'">Chat.Me 2</button>
   <button onclick="location.href='games/tetris/'">Tetris</button>
   <button onclick="location.href='games/scramble/'">Scramble</button>
@@ -130,7 +131,8 @@
       <button onclick="unbanUser()">Unban</button>
       <button onclick="muteUser()">Mute</button>
       <button onclick="unmuteUser()">Unmute</button>
-      <button onclick="sendAnnouncement()">📢 Global Message</button>
+
+      <button onclick="sendAnnouncement()">📢 Global Announcement</button>
 
       <button onclick="closeAction()">Close</button>
     </div>
@@ -143,8 +145,10 @@
 <script src="https://cdn.ably.io/lib/ably.min-1.js"></script>
 
 <script>
+
 const ADMIN = "iHunterDoesProductions";
-const ABLY_KEY = "c-wtfg.-Nr1zw:P37xNKXR2B4E-KOPhClqoUsFYS51FUiFroqUPVr3DZM"; // 🔑 PUT YOUR KEY HERE
+const ABLY_KEY = "c-wtfg.-Nr1zw:P37xNKXR2B4E-KOPhClqoUsFYS51FUiFroqUPVr3DZM";
+const CHANNEL = "ChatMeDos";
 
 let selectedUser = null;
 
@@ -154,36 +158,36 @@ function isAdmin(){
 
 /* LOGIN */
 function signUp(){
-  const u = username.value.trim();
-  const p = password.value;
+  const u=username.value.trim();
+  const p=password.value;
 
-  if(!u || !p) return alert("Fill all");
+  if(!u||!p) return;
 
-  localStorage.setItem("user_"+u, p);
+  localStorage.setItem("user_"+u,p);
 
-  let users = JSON.parse(localStorage.getItem("users")||"[]");
+  let users=JSON.parse(localStorage.getItem("users")||"[]");
   if(!users.includes(u)){
     users.push(u);
-    localStorage.setItem("users", JSON.stringify(users));
+    localStorage.setItem("users",JSON.stringify(users));
   }
 
-  localStorage.setItem("currentUser", u);
+  localStorage.setItem("currentUser",u);
   loadHub(u);
 }
 
 function signIn(){
-  const u = username.value.trim();
-  const p = password.value;
+  const u=username.value.trim();
+  const p=password.value;
 
   if(localStorage.getItem("banned_"+u)==="true"){
     return alert("Banned");
   }
 
   if(localStorage.getItem("user_"+u)!==p){
-    return alert("Wrong login");
+    return alert("Wrong password");
   }
 
-  localStorage.setItem("currentUser", u);
+  localStorage.setItem("currentUser",u);
   loadHub(u);
 }
 
@@ -203,7 +207,7 @@ function toggleAdmin(){
   if(!isAdmin()) return alert("Denied");
 
   adminPanel.style.display =
-    adminPanel.style.display==="block" ? "none":"block";
+    adminPanel.style.display==="block" ? "none" : "block";
 
   if(adminPanel.style.display==="block"){
     loadUsers();
@@ -211,7 +215,7 @@ function toggleAdmin(){
 }
 
 function loadUsers(){
-  let users = JSON.parse(localStorage.getItem("users")||"[]");
+  let users=JSON.parse(localStorage.getItem("users")||"[]");
   userList.innerHTML="";
 
   users.forEach(u=>{
@@ -235,36 +239,40 @@ function closeAction(){
 
 /* MODERATION */
 function banUser(){
-  if(!isAdmin()||!selectedUser) return;
+  if(!selectedUser) return;
   localStorage.setItem("banned_"+selectedUser,"true");
 }
 
 function unbanUser(){
-  if(!isAdmin()||!selectedUser) return;
+  if(!selectedUser) return;
   localStorage.removeItem("banned_"+selectedUser);
 }
 
 function muteUser(){
-  if(!isAdmin()||!selectedUser) return;
+  if(!selectedUser) return;
   localStorage.setItem("muted_"+selectedUser,"true");
 }
 
 function unmuteUser(){
-  if(!isAdmin()||!selectedUser) return;
+  if(!selectedUser) return;
   localStorage.removeItem("muted_"+selectedUser);
 }
 
-/* GLOBAL ANNOUNCEMENT */
+/* 🌐 GLOBAL ANNOUNCEMENT (FIXED) */
 function sendAnnouncement(){
   if(!isAdmin()) return;
 
-  const msg = prompt("Message:");
+  const msg = prompt("Enter announcement:");
   if(!msg) return;
 
   const ably = new Ably.Realtime({ key: ABLY_KEY });
-  const channel = ably.channels.get("chat-me-2");
+  const channel = ably.channels.get(CHANNEL);
 
-  channel.publish("announcement", { text: msg });
+  channel.publish("announcement", {
+    text: msg
+  });
+
+  alert("Sent!");
 }
 
 /* INIT */
@@ -272,6 +280,7 @@ window.onload=()=>{
   const u=localStorage.getItem("currentUser");
   if(u) loadHub(u);
 };
+
 </script>
 
 </body>
