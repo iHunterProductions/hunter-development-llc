@@ -116,7 +116,11 @@
 <div id="hub" class="box">
   <h2 id="welcome"></h2>
 
-  <button onclick="location.href='chat.html'">Chat.Me 2</button>
+  <!-- 🚫 HIDDEN CHAT BUTTON -->
+  <button id="chatBtn" style="display:none;" onclick="location.href='chat.html'">
+    Chat.Me 2
+  </button>
+
   <button onclick="location.href='games/tetris/'">Tetris</button>
   <button onclick="location.href='games/scramble/'">Scramble</button>
 
@@ -147,7 +151,7 @@
 const ADMIN = "iHunterDoesProductions";
 let selectedUser = null;
 
-/* CHECK ADMIN */
+/* ADMIN CHECK */
 function isAdmin(){
   return localStorage.getItem("currentUser") === ADMIN;
 }
