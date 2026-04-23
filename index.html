@@ -1,100 +1,145 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>iHunter Game Hub</title>
+  <title>Game Hub</title>
 
   <style>
     body {
       margin: 0;
-      background: radial-gradient(circle, #05070a, #000);
+      background: #000;
       font-family: Arial;
       color: #00ffff;
-      display: flex;
+    }
+
+    /* HUB BUTTON */
+    #openGridBtn {
+      margin: 20px;
+      padding: 12px 18px;
+      background: #00ffff;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+
+    #openGridBtn:hover {
+      box-shadow: 0 0 12px #00ffff;
+    }
+
+    /* OVERLAY */
+    #gridContainer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      display: none;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      flex-direction: column;
     }
 
-    .box {
-      width: 360px;
-      border: 2px solid #00ffff;
-      padding: 25px;
-      border-radius: 14px;
-      box-shadow: 0 0 25px #00ffff;
-      text-align: center;
-    }
-
-    h1 {
+    /* GRID */
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(16, 25px);
+      grid-template-rows: repeat(16, 25px);
+      gap: 2px;
       margin-bottom: 20px;
     }
 
-    button {
-      width: 95%;
-      padding: 12px;
-      margin-top: 10px;
-      border: none;
-      border-radius: 8px;
+    .cell {
+      width: 25px;
+      height: 25px;
+      background: #111;
+      border: 1px solid #00ffff33;
       cursor: pointer;
+      transition: 0.15s;
+    }
+
+    .cell:hover {
+      box-shadow: 0 0 6px #00ffff;
+    }
+
+    /* CLOSE BUTTON */
+    #closeBtn {
+      padding: 10px 15px;
+      background: #ff0055;
+      border: none;
+      color: white;
       font-weight: bold;
-      transition: 0.25s ease;
+      cursor: pointer;
+      border-radius: 6px;
     }
 
-    .main-btn {
-      background: #00c8c8;
-      color: #001818;
+    #closeBtn:hover {
+      box-shadow: 0 0 10px #ff0055;
     }
-
-    .main-btn:hover {
-      transform: scale(1.03);
-      box-shadow: 0 0 20px #003366;
-    }
-
-    #tetrisOptions {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.4s ease;
-    }
-
-    #tetrisOptions.show {
-      max-height: 300px;
-    }
-
-    .easy { background: #00cc66; }
-    .normal { background: #e6c200; }
-    .hard { background: #cc3333; color: white; }
-
-    .easy:hover { box-shadow: 0 0 15px #00ff99; }
-    .normal:hover { box-shadow: 0 0 15px #ffdd33; }
-    .hard:hover { box-shadow: 0 0 15px #ff4444; }
   </style>
 </head>
 
 <body>
 
-<div class="box">
-  <h1>iHunter Game Hub</h1>
+<!-- HUB BUTTON (UPDATED TEXT) -->
+<button id="openGridBtn">Buttons</button>
 
-  <button class="main-btn" onclick="toggleTetris()">Tetris</button>
+<!-- GRID OVERLAY -->
+<div id="gridContainer">
 
-  <div id="tetrisOptions">
-    <button class="easy" onclick="startGame(0.5)">Easy</button>
-    <button class="normal" onclick="startGame(1)">Normal</button>
-    <button class="hard" onclick="startGame(2)">Difficult</button>
-  </div>
+  <div id="grid"></div>
 
-  <button class="main-btn" onclick="location.href='games/scramble/'">
-    Scramble
-  </button>
+  <button id="closeBtn">Close</button>
+
 </div>
 
 <script>
-function toggleTetris(){
-  document.getElementById("tetrisOptions").classList.toggle("show");
-}
+const gridContainer = document.getElementById("gridContainer");
+const grid = document.getElementById("grid");
 
-function startGame(speed){
-  localStorage.setItem("tetrisSpeed", speed);
-  location.href = "games/tetris/";
+const openBtn = document.getElementById("openGridBtn");
+const closeBtn = document.getElementById("closeBtn");
+
+/* 🌈 COLORS */
+const colors = [
+  "#ff0000",
+  "#ff7f00",
+  "#ffff00",
+  "#00ff00",
+  "#00ffff",
+  "#8a2be2"
+];
+
+/* OPEN / CLOSE */
+openBtn.onclick = () => {
+  gridContainer.style.display = "flex";
+};
+
+closeBtn.onclick = () => {
+  gridContainer.style.display = "none";
+};
+
+/* BUILD GRID */
+for(let i = 0; i < 256; i++){
+  const cell = document.createElement("div");
+  cell.classList.add("cell");
+
+  let state = 0;
+
+  cell.addEventListener("click", () => {
+    state = (state + 1) % (colors.length + 1);
+
+    if(state === 0){
+      cell.style.background = "#111";
+      cell.style.boxShadow = "none";
+    } else {
+      const c = colors[state - 1];
+      cell.style.background = c;
+      cell.style.boxShadow = `0 0 10px ${c}`;
+    }
+  });
+
+  grid.appendChild(cell);
 }
 </script>
 
