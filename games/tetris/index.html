@@ -15,27 +15,22 @@
       font-family: Arial;
     }
 
-    #container {
-      display: flex;
-      gap: 30px;
-      align-items: center;
-    }
-
     canvas {
       background: #111;
-      box-shadow: 0 0 25px cyan;
+      box-shadow: 0 0 20px cyan;
     }
 
-    #side {
-      width: 120px;
+    #ui {
+      position: absolute;
+      right: 40px;
+      top: 50%;
+      transform: translateY(-50%);
       text-align: center;
     }
 
     #next {
-      width: 100px;
-      height: 100px;
       background: #111;
-      box-shadow: 0 0 15px cyan;
+      box-shadow: 0 0 10px cyan;
       margin-top: 10px;
     }
   </style>
@@ -43,18 +38,16 @@
 
 <body>
 
-<div id="container">
-  <canvas id="game" width="300" height="600"></canvas>
+<canvas id="game" width="240" height="400"></canvas>
 
-  <div id="side">
-    <h3>Tetris</h3>
+<div id="ui">
+  <h3>Tetris</h3>
 
-    <h3>Score</h3>
-    <div id="score">0</div>
+  <h3>Score</h3>
+  <div id="score">0</div>
 
-    <h3>Next</h3>
-    <canvas id="next" width="100" height="100"></canvas>
-  </div>
+  <h3>Next</h3>
+  <canvas id="next" width="80" height="80"></canvas>
 </div>
 
 <script>
@@ -64,11 +57,9 @@ const ctx = canvas.getContext("2d");
 const nextCanvas = document.getElementById("next");
 const nextCtx = nextCanvas.getContext("2d");
 
-const scoreEl = document.getElementById("score");
-
 const COLS = 10;
 const ROWS = 20;
-const SIZE = 30;
+const SIZE = 20;
 
 const speedMultiplier = localStorage.getItem("tetrisSpeed") || 1;
 let dropInterval = 1000 / speedMultiplier;
@@ -85,10 +76,10 @@ const pieces = [
 let piece = newPiece();
 let nextPiece = newPiece();
 
-let clearingRows = [];
 let score = 0;
+let clearing = [];
 
-/* 🎲 NEW PIECE */
+/* ORIGINAL STYLE PIECE */
 function newPiece(){
   return {
     x: 3,
@@ -97,44 +88,46 @@ function newPiece(){
   };
 }
 
-/* 👻 GHOST */
-function getGhostY(){
-  let ghostY = piece.y;
-  while(!collision(piece.x, ghostY+1)) ghostY++;
-  return ghostY;
-}
-
-/* 💥 COLLISION (FIXED) */
-function collision(x,y){
+/* COLLISION (original behavior preserved) */
+function collide(px, py){
   return piece.shape.some((row,dy)=>
     row.some((val,dx)=>{
       if(!val) return false;
 
-      let nx = x + dx;
-      let ny = y + dy;
+      let x = px + dx;
+      let y = py + dy;
 
-      if(nx < 0 || nx >= COLS || ny >= ROWS) return true;
-      if(ny < 0) return false;
-
-      return board[ny][nx];
+      return (
+        y >= ROWS ||
+        x < 0 ||
+        x >= COLS ||
+        (y >= 0 && board[y][x])
+      );
     })
   );
 }
 
-/* 🎨 DRAW BLOCK */
-function drawBlock(ctx,x,y,color,glow){
+/* GHOST */
+function getGhostY(){
+  let y = piece.y;
+  while(!collide(piece.x, y+1)) y++;
+  return y;
+}
+
+/* DRAW BLOCK */
+function drawBlock(x,y,color,glow){
   if(glow){
     ctx.shadowBlur = 15;
     ctx.shadowColor = color;
   }
 
   ctx.fillStyle = color;
-  ctx.fillRect(x,y,SIZE,SIZE);
+  ctx.fillRect(x*SIZE,y*SIZE,SIZE,SIZE);
 
   ctx.shadowBlur = 0;
 }
 
-/* 🎨 DRAW */
+/* DRAW */
 function draw(){
   ctx.fillStyle="#000";
   ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -143,17 +136,18 @@ function draw(){
   for(let y=0;y<ROWS;y++){
     for(let x=0;x<COLS;x++){
       if(board[y][x]){
-        drawBlock(ctx,x*SIZE,y*SIZE,"cyan",true);
+        drawBlock(x,y,"cyan",true);
       }
     }
   }
 
-  /* 👻 GHOST */
+  /* GHOST */
   let ghostY = getGhostY();
   piece.shape.forEach((row,dy)=>{
     row.forEach((val,dx)=>{
       if(val){
-        drawBlock(ctx,(piece.x+dx)*SIZE,(ghostY+dy)*SIZE,"rgba(0,255,255,0.2)",false);
+        ctx.fillStyle="rgba(0,255,255,0.2)";
+        ctx.fillRect((piece.x+dx)*SIZE,(ghostY+dy)*SIZE,SIZE,SIZE);
       }
     });
   });
@@ -162,32 +156,33 @@ function draw(){
   piece.shape.forEach((row,dy)=>{
     row.forEach((val,dx)=>{
       if(val){
-        drawBlock(ctx,(piece.x+dx)*SIZE,(piece.y+dy)*SIZE,"cyan",true);
+        drawBlock(piece.x+dx,piece.y+dy,"cyan",true);
       }
     });
   });
 
-  /* 💥 LINE FLASH */
-  clearingRows.forEach(row=>{
+  /* LINE FLASH */
+  clearing.forEach(row=>{
     ctx.fillStyle="white";
     ctx.fillRect(0,row*SIZE,canvas.width,SIZE);
   });
 }
 
-/* 📦 NEXT PIECE */
+/* NEXT BOX */
 function drawNext(){
-  nextCtx.clearRect(0,0,100,100);
+  nextCtx.clearRect(0,0,80,80);
 
   nextPiece.shape.forEach((row,dy)=>{
     row.forEach((val,dx)=>{
       if(val){
-        drawBlock(nextCtx, dx*20+20, dy*20+20, "cyan", true);
+        nextCtx.fillStyle="cyan";
+        nextCtx.fillRect(dx*20+10,dy*20+10,20,20);
       }
     });
   });
 }
 
-/* 🔄 MERGE */
+/* MERGE */
 function merge(){
   piece.shape.forEach((row,dy)=>{
     row.forEach((val,dx)=>{
@@ -198,40 +193,40 @@ function merge(){
   });
 }
 
-/* 💥 CLEAR LINES */
-function checkLines(){
-  clearingRows = [];
+/* CLEAR LINES */
+function clearLines(){
+  clearing = [];
   let lines = 0;
 
   for(let y=0;y<ROWS;y++){
     if(board[y].every(v=>v)){
-      clearingRows.push(y);
+      clearing.push(y);
       lines++;
     }
   }
 
   if(lines){
     score += lines * 100;
-    scoreEl.innerText = score;
+    document.getElementById("score").innerText = score;
 
     setTimeout(()=>{
-      clearingRows.forEach(row=>{
+      clearing.forEach(row=>{
         board.splice(row,1);
         board.unshift(Array(COLS).fill(0));
       });
-      clearingRows = [];
-    },150);
+      clearing = [];
+    },120);
   }
 }
 
-/* ⬇ UPDATE */
+/* UPDATE */
 function update(){
   piece.y++;
 
-  if(collision(piece.x,piece.y)){
+  if(collide(piece.x,piece.y)){
     piece.y--;
     merge();
-    checkLines();
+    clearLines();
 
     piece = nextPiece;
     nextPiece = newPiece();
@@ -239,25 +234,25 @@ function update(){
   }
 }
 
-/* ⏱ LOOP */
-let lastTime=0;
-function loop(time=0){
-  if(time-lastTime>dropInterval){
+/* LOOP */
+let last=0;
+function loop(t=0){
+  if(t-last > dropInterval){
     update();
-    lastTime=time;
+    last = t;
   }
 
   draw();
   requestAnimationFrame(loop);
 }
 
-/* 🎮 CONTROLS */
+/* CONTROLS (UNCHANGED FEEL) */
 document.addEventListener("keydown", e=>{
   if(e.key==="ArrowLeft") piece.x--;
   if(e.key==="ArrowRight") piece.x++;
   if(e.key==="ArrowDown") piece.y++;
 
-  if(collision(piece.x,piece.y)){
+  if(collide(piece.x,piece.y)){
     if(e.key==="ArrowLeft") piece.x++;
     if(e.key==="ArrowRight") piece.x--;
     if(e.key==="ArrowDown") piece.y--;
