@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Game Hub</title>
+  <title>iHunter Game Hub</title>
 
   <style>
     body {
@@ -11,96 +11,146 @@
       color: #00ffff;
     }
 
-    /* HUB BUTTON */
-    #openGridBtn {
-      margin: 20px;
-      padding: 12px 18px;
+    .hub {
+      margin: 30px;
+    }
+
+    /* MAIN BUTTON STYLE */
+    .mainBtn {
+      width: 180px;
+      padding: 10px;
       background: #00ffff;
       border: none;
       font-weight: bold;
       cursor: pointer;
       border-radius: 6px;
+      margin-bottom: 5px;
+      display: block;
     }
 
-    #openGridBtn:hover {
+    .mainBtn:hover {
       box-shadow: 0 0 12px #00ffff;
     }
 
-    /* OVERLAY */
-    #gridContainer {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.9);
+    /* DROPDOWN CONTAINER */
+    .dropdown {
       display: none;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
+      margin-left: 20px;
+      margin-bottom: 10px;
     }
 
-    /* GRID */
-    #grid {
-      display: grid;
-      grid-template-columns: repeat(16, 25px);
-      grid-template-rows: repeat(16, 25px);
-      gap: 2px;
-      margin-bottom: 20px;
-    }
-
-    .cell {
-      width: 25px;
-      height: 25px;
-      background: #111;
-      border: 1px solid #00ffff33;
-      cursor: pointer;
-      transition: 0.15s;
-    }
-
-    .cell:hover {
-      box-shadow: 0 0 6px #00ffff;
-    }
-
-    /* CLOSE BUTTON */
-    #closeBtn {
-      padding: 10px 15px;
-      background: #ff0055;
+    .dropdown button {
+      width: 160px;
+      padding: 8px;
+      margin-top: 5px;
       border: none;
-      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 5px;
+      color: black;
+    }
+
+    /* DIFFICULTY COLORS */
+    .hard { background: #ff0033; }
+    .normal { background: #ffcc00; }
+    .easy { background: #00ff66; }
+
+    /* SIMPLE BUTTONS */
+    .simpleBtn {
+      width: 180px;
+      padding: 10px;
+      background: #00ffff;
+      border: none;
       font-weight: bold;
       cursor: pointer;
       border-radius: 6px;
+      margin-top: 10px;
+      display: block;
     }
 
-    #closeBtn:hover {
-      box-shadow: 0 0 10px #ff0055;
+    .simpleBtn:hover {
+      box-shadow: 0 0 12px #00ffff;
     }
   </style>
 </head>
 
 <body>
 
-<!-- HUB BUTTON (UPDATED TEXT) -->
-<button id="openGridBtn">Buttons</button>
+<div class="hub">
+
+  <!-- TETRIS DROPDOWN -->
+  <button class="mainBtn" onclick="toggle('tetrisMenu')">
+    Tetris ▼
+  </button>
+
+  <div id="tetrisMenu" class="dropdown">
+    <button class="hard" onclick="location.href='games/tetris/hard.html'">Hard</button>
+    <button class="normal" onclick="location.href='games/tetris/normal.html'">Normal</button>
+    <button class="easy" onclick="location.href='games/tetris/easy.html'">Easy</button>
+  </div>
+
+  <!-- SCRAMBLE -->
+  <button class="simpleBtn" onclick="location.href='games/scramble/index.html'">
+    Scramble
+  </button>
+
+  <!-- BUTTONS (GRID TOOL) -->
+  <button class="simpleBtn" onclick="openGrid()">
+    Buttons
+  </button>
+
+</div>
 
 <!-- GRID OVERLAY -->
-<div id="gridContainer">
+<div id="gridContainer" style="
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:rgba(0,0,0,0.9);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+">
 
-  <div id="grid"></div>
+  <div id="grid" style="
+    display:grid;
+    grid-template-columns:repeat(16,25px);
+    grid-template-rows:repeat(16,25px);
+    gap:2px;
+    margin-bottom:20px;
+  "></div>
 
-  <button id="closeBtn">Close</button>
+  <button onclick="closeGrid()" style="
+    padding:10px 15px;
+    background:#ff0055;
+    border:none;
+    color:white;
+    font-weight:bold;
+    border-radius:6px;
+    cursor:pointer;
+  ">Close</button>
 
 </div>
 
 <script>
-const gridContainer = document.getElementById("gridContainer");
+/* DROPDOWN TOGGLE */
+function toggle(id){
+  const el = document.getElementById(id);
+  el.style.display = el.style.display === "block" ? "none" : "block";
+}
+
+/* GRID OPEN/CLOSE */
+function openGrid(){
+  document.getElementById("gridContainer").style.display = "flex";
+}
+function closeGrid(){
+  document.getElementById("gridContainer").style.display = "none";
+}
+
+/* GRID BUILD */
 const grid = document.getElementById("grid");
 
-const openBtn = document.getElementById("openGridBtn");
-const closeBtn = document.getElementById("closeBtn");
-
-/* 🌈 COLORS */
 const colors = [
   "#ff0000",
   "#ff7f00",
@@ -110,23 +160,17 @@ const colors = [
   "#8a2be2"
 ];
 
-/* OPEN / CLOSE */
-openBtn.onclick = () => {
-  gridContainer.style.display = "flex";
-};
-
-closeBtn.onclick = () => {
-  gridContainer.style.display = "none";
-};
-
-/* BUILD GRID */
-for(let i = 0; i < 256; i++){
+for(let i=0;i<256;i++){
   const cell = document.createElement("div");
-  cell.classList.add("cell");
+  cell.style.width = "25px";
+  cell.style.height = "25px";
+  cell.style.background = "#111";
+  cell.style.border = "1px solid #00ffff33";
+  cell.style.cursor = "pointer";
 
   let state = 0;
 
-  cell.addEventListener("click", () => {
+  cell.onclick = () => {
     state = (state + 1) % (colors.length + 1);
 
     if(state === 0){
@@ -137,7 +181,7 @@ for(let i = 0; i < 256; i++){
       cell.style.background = c;
       cell.style.boxShadow = `0 0 10px ${c}`;
     }
-  });
+  };
 
   grid.appendChild(cell);
 }
