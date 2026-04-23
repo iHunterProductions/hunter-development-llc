@@ -6,105 +6,31 @@
   <style>
     body {
       margin: 0;
-      background: #000;
+      background: radial-gradient(circle, #05070a, #000);
       font-family: Arial;
       color: #00ffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
 
-    .hub {
-      margin: 30px;
+    .box {
+      width: 360px;
+      border: 2px solid #00ffff;
+      padding: 25px;
+      border-radius: 14px;
+      box-shadow: 0 0 25px #00ffff;
+      text-align: center;
     }
 
-    .mainBtn {
-      width: 180px;
-      padding: 10px;
-      background: #00ffff;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-      border-radius: 6px;
-      margin-bottom: 6px;
-      display: block;
-      color: black;
+    h1 {
+      margin-bottom: 20px;
     }
 
-    .mainBtn:hover {
-      box-shadow: 0 0 12px #00ffff;
-    }
-
-    .dropdown {
-      display: none;
-      margin-left: 20px;
-      margin-bottom: 10px;
-    }
-
-    .dropdown button {
-      width: 160px;
-      padding: 8px;
-      margin-top: 5px;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-      border-radius: 5px;
-      color: black;
-    }
-
-    .hard { background: #ff0033; }
-    .normal { background: #ffcc00; }
-    .easy { background: #00ff66; }
-
-    .simpleBtn {
-      width: 180px;
-      padding: 10px;
-      background: #00ffff;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-      border-radius: 6px;
+    button {
+      width: 95%;
+      padding: 12px;
       margin-top: 10px;
-      display: block;
-      color: black;
-    }
-
-    .simpleBtn:hover {
-      box-shadow: 0 0 12px #00ffff;
-    }
-  </style>
-</head>
-
-<body>
-
-<div class="hub">
-
-  <!-- TETRIS -->
-  <button class="mainBtn" onclick="toggle('tetrisMenu')">
-    Tetris ▼
-  </button>
-
-  <div id="tetrisMenu" class="dropdown">
-    <button class="hard" onclick="location.href='games/tetris/hard.html'">Hard</button>
-    <button class="normal" onclick="location.href='games/tetris/normal.html'">Normal</button>
-    <button class="easy" onclick="location.href='games/tetris/easy.html'">Easy</button>
-  </div>
-
-  <!-- SCRAMBLE -->
-  <button class="simpleBtn" onclick="location.href='games/scramble/index.html'">
-    Scramble
-  </button>
-
-  <!-- 🆕 BUTTONS (GRID GAME) -->
-  <button class="simpleBtn" onclick="location.href='games/grid/index.html'">
-    Buttons
-  </button>
-
-</div>
-
-<script>
-function toggle(id){
-  const el = document.getElementById(id);
-  el.style.display = el.style.display === "block" ? "none" : "block";
-}
-</script>
-
-</body>
-</html>
+      border: none;
+      border-radius: 8px;
