@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Rainbow Grid</title>
+
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: Arial;
+    }
+
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(16, 25px);
+      grid-template-rows: repeat(16, 25px);
+      gap: 2px;
+    }
+
+    .cell {
+      width: 25px;
+      height: 25px;
+      background: #111;
+      border: 1px solid #00ffff33;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+
+    .cell:hover {
+      box-shadow: 0 0 6px #00ffff;
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="grid"></div>
+
+<script>
+const grid = document.getElementById("grid");
+
+/* 🌈 6 rainbow colors */
+const colors = [
+  "#ff0000", // red
+  "#ff7f00", // orange
+  "#ffff00", // yellow
+  "#00ff00", // green
+  "#00ffff", // cyan
+  "#8a2be2"  // purple
+];
+
+for(let i = 0; i < 256; i++){
+  const cell = document.createElement("div");
+  cell.classList.add("cell");
+
+  let state = 0;
+
+  cell.addEventListener("click", () => {
+    state = (state + 1) % (colors.length + 1);
+
+    if(state === 0){
+      cell.style.background = "#111";
+      cell.style.boxShadow = "none";
+    } else {
+      cell.style.background = colors[state - 1];
+      cell.style.boxShadow = `0 0 10px ${colors[state - 1]}`;
+    }
+  });
+
+  grid.appendChild(cell);
+}
+</script>
+
+</body>
+</html>
