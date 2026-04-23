@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Neon Tetris</title>
+  <title>Tetris</title>
 
   <style>
     body {
@@ -67,7 +67,7 @@
   <canvas id="game" width="300" height="600"></canvas>
 
   <div class="panel">
-    <h2>Neon Tetris</h2>
+    <h2>Tetris</h2>
 
     <div id="score">0</div>
 
@@ -115,7 +115,6 @@ const colors = [
 let score = 0;
 let dropCounter = 0;
 
-/* SPEED (from hub) */
 const speedMultiplier = localStorage.getItem("tetrisSpeed") || 1;
 let dropInterval = 500 / speedMultiplier;
 
@@ -124,7 +123,6 @@ let lastTime = 0;
 let nextPiece = randomPiece();
 let current = randomPiece();
 
-/* LINE ANIMATION */
 let flashRows = [];
 let flashTimer = 0;
 
@@ -157,12 +155,7 @@ function collide(p){
 
 /* GHOST */
 function getGhost(){
-  let ghost = {
-    shape: current.shape,
-    x: current.x,
-    y: current.y
-  };
-
+  let ghost = {...current};
   while(!collide(ghost)) ghost.y++;
   ghost.y--;
   return ghost;
@@ -179,7 +172,7 @@ function merge(){
   });
 }
 
-/* CLEAR LINES + FLASH */
+/* CLEAR */
 function clearLines(){
   flashRows = [];
 
@@ -256,7 +249,7 @@ document.addEventListener("keydown", e=>{
   if(e.key==="ArrowUp") rotate();
 });
 
-/* NEXT PIECE */
+/* NEXT */
 function drawNext(){
   nctx.clearRect(0,0,120,120);
 
@@ -276,8 +269,8 @@ function draw(){
   ctx.fillStyle = "#000";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  /* GHOST */
   let ghost = getGhost();
+
   ctx.fillStyle = "rgba(0,255,255,0.2)";
   ghost.shape.forEach((row,y)=>{
     row.forEach((v,x)=>{
@@ -287,7 +280,6 @@ function draw(){
     });
   });
 
-  /* BOARD */
   for(let y=0;y<ROWS;y++){
     for(let x=0;x<COLS;x++){
       if(board[y][x]){
@@ -299,7 +291,6 @@ function draw(){
     }
   }
 
-  /* FLASH */
   if(flashTimer > 0){
     ctx.fillStyle = "white";
     flashRows.forEach(r=>{
@@ -308,7 +299,6 @@ function draw(){
     flashTimer--;
   }
 
-  /* PIECE */
   ctx.fillStyle = current.color;
   ctx.shadowBlur = 15;
   ctx.shadowColor = current.color;
