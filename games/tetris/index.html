@@ -1,53 +1,82 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Tetris</title>
+  <title>Neon Tetris</title>
 
   <style>
     body {
       margin: 0;
-      background: black;
+      background: #000;
+      color: #00ffff;
+      font-family: Arial;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      color: cyan;
-      font-family: Arial;
+    }
+
+    .wrap {
+      display: flex;
+      gap: 20px;
+      border: 2px solid #00ffff;
+      padding: 20px;
+      box-shadow: 0 0 25px #00ffff;
+      background: #000;
     }
 
     canvas {
-      background: #111;
-      box-shadow: 0 0 20px cyan;
+      background:
+        linear-gradient(90deg, rgba(0,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(0,255,255,0.05) 1px, transparent 1px);
+      background-size: 30px 30px;
+      border: 2px solid #00ffff;
     }
 
-    #ui {
-      position: absolute;
-      right: 40px;
-      top: 50%;
-      transform: translateY(-50%);
+    .panel {
+      width: 180px;
       text-align: center;
     }
 
-    #next {
-      background: #111;
-      box-shadow: 0 0 10px cyan;
+    button {
+      width: 100%;
       margin-top: 10px;
+      padding: 10px;
+      background: #00ffff;
+      border: none;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    #score {
+      font-size: 20px;
+      margin: 10px 0;
+    }
+
+    #next {
+      margin-top: 10px;
+      border: 1px solid #00ffff;
+      height: 80px;
     }
   </style>
 </head>
 
 <body>
 
-<canvas id="game" width="240" height="400"></canvas>
+<div class="wrap">
+  <canvas id="game" width="300" height="600"></canvas>
 
-<div id="ui">
-  <h3>Tetris</h3>
+  <div class="panel">
+    <h2>Neon Tetris</h2>
 
-  <h3>Score</h3>
-  <div id="score">0</div>
+    <div id="score">0</div>
 
-  <h3>Next</h3>
-  <canvas id="next" width="80" height="80"></canvas>
+    <div>Next Piece:</div>
+    <canvas id="next" width="120" height="120"></canvas>
+
+    <button onclick="location.reload()">Restart</button>
+    <button onclick="location.href='../../index.html'">Home</button>
+  </div>
 </div>
 
 <script>
@@ -55,211 +84,261 @@ const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
 const nextCanvas = document.getElementById("next");
-const nextCtx = nextCanvas.getContext("2d");
+const nctx = nextCanvas.getContext("2d");
 
 const COLS = 10;
 const ROWS = 20;
-const SIZE = 20;
-
-const speedMultiplier = localStorage.getItem("tetrisSpeed") || 1;
-let dropInterval = 1000 / speedMultiplier;
+const SIZE = 30;
 
 let board = Array.from({length: ROWS}, () => Array(COLS).fill(0));
 
 const pieces = [
-  [[1,1,1],[0,1,0]],
+  [[1,1,1,1]],
   [[1,1],[1,1]],
-  [[0,1,1],[1,1,0]],
+  [[0,1,0],[1,1,1]],
   [[1,1,0],[0,1,1]],
+  [[0,1,1],[1,1,0]],
+  [[1,0,0],[1,1,1]],
+  [[0,0,1],[1,1,1]]
 ];
 
-let piece = newPiece();
-let nextPiece = newPiece();
+const colors = [
+  "#00ffff",
+  "#ff00ff",
+  "#00ff88",
+  "#ffff00",
+  "#ff0055",
+  "#00aaff",
+  "#ff8800"
+];
 
 let score = 0;
-let clearing = [];
+let dropCounter = 0;
 
-/* ORIGINAL STYLE PIECE */
-function newPiece(){
+/* SPEED (from hub) */
+const speedMultiplier = localStorage.getItem("tetrisSpeed") || 1;
+let dropInterval = 500 / speedMultiplier;
+
+let lastTime = 0;
+
+let nextPiece = randomPiece();
+let current = randomPiece();
+
+/* LINE ANIMATION */
+let flashRows = [];
+let flashTimer = 0;
+
+/* PIECE */
+function randomPiece(){
+  let i = Math.floor(Math.random()*pieces.length);
   return {
+    shape: pieces[i],
+    color: colors[i],
     x: 3,
-    y: 0,
-    shape: pieces[Math.floor(Math.random()*pieces.length)]
+    y: 0
   };
 }
 
-/* COLLISION (original behavior preserved) */
-function collide(px, py){
-  return piece.shape.some((row,dy)=>
-    row.some((val,dx)=>{
-      if(!val) return false;
+/* COLLISION */
+function collide(p){
+  for(let y=0;y<p.shape.length;y++){
+    for(let x=0;x<p.shape[y].length;x++){
+      if(p.shape[y][x]){
+        let nx = p.x + x;
+        let ny = p.y + y;
 
-      let x = px + dx;
-      let y = py + dy;
-
-      return (
-        y >= ROWS ||
-        x < 0 ||
-        x >= COLS ||
-        (y >= 0 && board[y][x])
-      );
-    })
-  );
+        if(nx < 0 || nx >= COLS || ny >= ROWS) return true;
+        if(ny >= 0 && board[ny][nx]) return true;
+      }
+    }
+  }
+  return false;
 }
 
 /* GHOST */
-function getGhostY(){
-  let y = piece.y;
-  while(!collide(piece.x, y+1)) y++;
-  return y;
+function getGhost(){
+  let ghost = {
+    shape: current.shape,
+    x: current.x,
+    y: current.y
+  };
+
+  while(!collide(ghost)) ghost.y++;
+  ghost.y--;
+  return ghost;
 }
 
-/* DRAW BLOCK */
-function drawBlock(x,y,color,glow){
-  if(glow){
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = color;
+/* MERGE */
+function merge(){
+  current.shape.forEach((row,y)=>{
+    row.forEach((v,x)=>{
+      if(v){
+        board[current.y+y][current.x+x] = current.color;
+      }
+    });
+  });
+}
+
+/* CLEAR LINES + FLASH */
+function clearLines(){
+  flashRows = [];
+
+  for(let y=ROWS-1;y>=0;y--){
+    if(board[y].every(v=>v)){
+      flashRows.push(y);
+    }
   }
 
-  ctx.fillStyle = color;
-  ctx.fillRect(x*SIZE,y*SIZE,SIZE,SIZE);
+  if(flashRows.length){
+    flashTimer = 10;
 
-  ctx.shadowBlur = 0;
+    setTimeout(()=>{
+      flashRows.forEach(row=>{
+        board.splice(row,1);
+        board.unshift(Array(COLS).fill(0));
+      });
+
+      score += flashRows.length * 100;
+      document.getElementById("score").innerText = score;
+
+      flashRows = [];
+    },120);
+  }
+}
+
+/* SPAWN */
+function spawn(){
+  current = nextPiece;
+  nextPiece = randomPiece();
+  drawNext();
+
+  if(collide(current)){
+    alert("Game Over");
+    location.reload();
+  }
+}
+
+/* MOVE */
+function move(dir){
+  current.x += dir;
+  if(collide(current)) current.x -= dir;
+}
+
+/* ROTATE */
+function rotate(){
+  let rotated = current.shape[0].map((_,i)=>
+    current.shape.map(r=>r[i]).reverse()
+  );
+
+  let old = current.shape;
+  current.shape = rotated;
+
+  if(collide(current)) current.shape = old;
+}
+
+/* DROP */
+function drop(){
+  current.y++;
+  if(collide(current)){
+    current.y--;
+    merge();
+    clearLines();
+    spawn();
+  }
+  dropCounter = 0;
+}
+
+/* INPUT */
+document.addEventListener("keydown", e=>{
+  if(e.key==="ArrowLeft") move(-1);
+  if(e.key==="ArrowRight") move(1);
+  if(e.key==="ArrowDown") drop();
+  if(e.key==="ArrowUp") rotate();
+});
+
+/* NEXT PIECE */
+function drawNext(){
+  nctx.clearRect(0,0,120,120);
+
+  nctx.fillStyle = nextPiece.color;
+
+  nextPiece.shape.forEach((row,y)=>{
+    row.forEach((v,x)=>{
+      if(v){
+        nctx.fillRect(x*25+20,y*25+20,20,20);
+      }
+    });
+  });
 }
 
 /* DRAW */
 function draw(){
-  ctx.fillStyle="#000";
+  ctx.fillStyle = "#000";
   ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  /* GHOST */
+  let ghost = getGhost();
+  ctx.fillStyle = "rgba(0,255,255,0.2)";
+  ghost.shape.forEach((row,y)=>{
+    row.forEach((v,x)=>{
+      if(v){
+        ctx.fillRect((ghost.x+x)*SIZE,(ghost.y+y)*SIZE,SIZE,SIZE);
+      }
+    });
+  });
 
   /* BOARD */
   for(let y=0;y<ROWS;y++){
     for(let x=0;x<COLS;x++){
       if(board[y][x]){
-        drawBlock(x,y,"cyan",true);
+        ctx.fillStyle = board[y][x];
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = board[y][x];
+        ctx.fillRect(x*SIZE,y*SIZE,SIZE,SIZE);
       }
     }
   }
 
-  /* GHOST */
-  let ghostY = getGhostY();
-  piece.shape.forEach((row,dy)=>{
-    row.forEach((val,dx)=>{
-      if(val){
-        ctx.fillStyle="rgba(0,255,255,0.2)";
-        ctx.fillRect((piece.x+dx)*SIZE,(ghostY+dy)*SIZE,SIZE,SIZE);
-      }
+  /* FLASH */
+  if(flashTimer > 0){
+    ctx.fillStyle = "white";
+    flashRows.forEach(r=>{
+      ctx.fillRect(0,r*SIZE,canvas.width,SIZE);
     });
-  });
+    flashTimer--;
+  }
 
   /* PIECE */
-  piece.shape.forEach((row,dy)=>{
-    row.forEach((val,dx)=>{
-      if(val){
-        drawBlock(piece.x+dx,piece.y+dy,"cyan",true);
+  ctx.fillStyle = current.color;
+  ctx.shadowBlur = 15;
+  ctx.shadowColor = current.color;
+
+  current.shape.forEach((row,y)=>{
+    row.forEach((v,x)=>{
+      if(v){
+        ctx.fillRect((current.x+x)*SIZE,(current.y+y)*SIZE,SIZE,SIZE);
       }
     });
   });
 
-  /* LINE FLASH */
-  clearing.forEach(row=>{
-    ctx.fillStyle="white";
-    ctx.fillRect(0,row*SIZE,canvas.width,SIZE);
-  });
-}
-
-/* NEXT BOX */
-function drawNext(){
-  nextCtx.clearRect(0,0,80,80);
-
-  nextPiece.shape.forEach((row,dy)=>{
-    row.forEach((val,dx)=>{
-      if(val){
-        nextCtx.fillStyle="cyan";
-        nextCtx.fillRect(dx*20+10,dy*20+10,20,20);
-      }
-    });
-  });
-}
-
-/* MERGE */
-function merge(){
-  piece.shape.forEach((row,dy)=>{
-    row.forEach((val,dx)=>{
-      if(val){
-        board[piece.y+dy][piece.x+dx] = 1;
-      }
-    });
-  });
-}
-
-/* CLEAR LINES */
-function clearLines(){
-  clearing = [];
-  let lines = 0;
-
-  for(let y=0;y<ROWS;y++){
-    if(board[y].every(v=>v)){
-      clearing.push(y);
-      lines++;
-    }
-  }
-
-  if(lines){
-    score += lines * 100;
-    document.getElementById("score").innerText = score;
-
-    setTimeout(()=>{
-      clearing.forEach(row=>{
-        board.splice(row,1);
-        board.unshift(Array(COLS).fill(0));
-      });
-      clearing = [];
-    },120);
-  }
-}
-
-/* UPDATE */
-function update(){
-  piece.y++;
-
-  if(collide(piece.x,piece.y)){
-    piece.y--;
-    merge();
-    clearLines();
-
-    piece = nextPiece;
-    nextPiece = newPiece();
-    drawNext();
-  }
+  ctx.shadowBlur = 0;
 }
 
 /* LOOP */
-let last=0;
-function loop(t=0){
-  if(t-last > dropInterval){
-    update();
-    last = t;
+function loop(time=0){
+  let delta = time - lastTime;
+  lastTime = time;
+
+  dropCounter += delta;
+  if(dropCounter > dropInterval){
+    drop();
   }
 
   draw();
   requestAnimationFrame(loop);
 }
 
-/* CONTROLS (UNCHANGED FEEL) */
-document.addEventListener("keydown", e=>{
-  if(e.key==="ArrowLeft") piece.x--;
-  if(e.key==="ArrowRight") piece.x++;
-  if(e.key==="ArrowDown") piece.y++;
-
-  if(collide(piece.x,piece.y)){
-    if(e.key==="ArrowLeft") piece.x++;
-    if(e.key==="ArrowRight") piece.x--;
-    if(e.key==="ArrowDown") piece.y--;
-  }
-});
-
-/* INIT */
+spawn();
 drawNext();
 loop();
 </script>
