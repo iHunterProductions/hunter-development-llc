@@ -122,9 +122,6 @@ let dropInterval = 500 / speedMultiplier;
 let nextPiece = randomPiece();
 let current = randomPiece();
 
-let flashRows = [];
-let flashTimer = 0;
-
 /* PIECE */
 function randomPiece(){
   let i = Math.floor(Math.random()*pieces.length);
@@ -153,7 +150,7 @@ function collide(p){
 }
 
 /* 👻 GHOST PIECE */
-function getGhostPiece(){
+function getGhost(){
   let ghost = {
     shape: current.shape,
     x: current.x,
@@ -179,30 +176,22 @@ function merge(){
   });
 }
 
-/* CLEAR LINES */
+/* ✅ FIXED LINE CLEAR (NO DELAYS, NO CORRUPTION) */
 function clearLines(){
-  flashRows = [];
+  let cleared = 0;
 
-  for(let y=ROWS-1;y>=0;y--){
-    if(board[y].every(v=>v)){
-      flashRows.push(y);
+  for(let y = ROWS - 1; y >= 0; y--){
+    if(board[y].every(cell => cell !== 0)){
+      board.splice(y, 1);
+      board.unshift(Array(COLS).fill(0));
+      cleared++;
+      y++;
     }
   }
 
-  if(flashRows.length){
-    flashTimer = 10;
-
-    setTimeout(()=>{
-      flashRows.forEach(r=>{
-        board.splice(r,1);
-        board.unshift(Array(COLS).fill(0));
-      });
-
-      score += flashRows.length * 100;
-      document.getElementById("score").innerText = score;
-
-      flashRows = [];
-    },120);
+  if(cleared > 0){
+    score += cleared * 100;
+    document.getElementById("score").innerText = score;
   }
 }
 
@@ -278,8 +267,8 @@ function draw(){
   ctx.fillStyle = "#000";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  /* 👻 GHOST RENDER */
-  let ghost = getGhostPiece();
+  /* GHOST */
+  let ghost = getGhost();
 
   ctx.fillStyle = "rgba(0,255,255,0.25)";
   ghost.shape.forEach((row,y)=>{
@@ -307,16 +296,7 @@ function draw(){
     }
   }
 
-  /* FLASH */
-  if(flashTimer > 0){
-    ctx.fillStyle = "white";
-    flashRows.forEach(r=>{
-      ctx.fillRect(0,r*SIZE,canvas.width,SIZE);
-    });
-    flashTimer--;
-  }
-
-  /* CURRENT PIECE */
+  /* PIECE */
   ctx.fillStyle = current.color;
   ctx.shadowBlur = 15;
   ctx.shadowColor = current.color;
