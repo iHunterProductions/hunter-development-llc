@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Hunter Arcade</title>
+  <title>iHunter Game Hub</title>
 
   <style>
     body {
@@ -24,253 +24,78 @@
       text-align: center;
     }
 
-    input {
-      width: 90%;
-      padding: 10px;
-      margin: 6px 0;
-      border: none;
-      border-radius: 6px;
-      text-align: center;
+    h1 {
+      margin-bottom: 20px;
     }
 
     button {
       width: 95%;
-      padding: 10px;
+      padding: 12px;
       margin-top: 10px;
-      background: #00c8c8;
       border: none;
       border-radius: 8px;
       cursor: pointer;
       font-weight: bold;
-      color: #001818;
-      transition: 0.2s;
+      transition: 0.25s ease;
     }
 
-    button:hover {
+    .main-btn {
+      background: #00c8c8;
+      color: #001818;
+    }
+
+    .main-btn:hover {
       transform: scale(1.03);
       box-shadow: 0 0 20px #003366;
     }
 
-    #hub { display: none; }
-
-    /* ADMIN PANEL */
-    #adminPanel {
-      display: none;
-      margin-top: 10px;
-      border-top: 1px solid #00ffff;
-      padding-top: 10px;
+    #tetrisOptions {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
     }
 
-    #userList div {
-      padding: 6px;
-      margin: 4px 0;
-      border: 1px solid #00ffff;
-      cursor: pointer;
+    #tetrisOptions.show {
+      max-height: 300px;
     }
 
-    #actionBox {
-      display: none;
-      margin-top: 10px;
-      border-top: 1px solid #00ffff;
-      padding-top: 10px;
-    }
+    .easy { background: #00cc66; }
+    .normal { background: #e6c200; }
+    .hard { background: #cc3333; color: white; }
 
-    /* 🔘 AP BUTTON */
-    #adminBtn {
-      position: fixed;
-      bottom: 15px;
-      left: 15px;
-      width: 55px;
-      height: 55px;
-      border-radius: 50%;
-      border: none;
-      background: #00c8c8;
-      font-weight: bold;
-      cursor: pointer;
-      display: none;
-      box-shadow: 0 0 10px #00ffff;
-      z-index: 9999;
-    }
-
-    #adminBtn:hover {
-      transform: scale(1.15);
-      box-shadow: 0 0 25px #003366;
-    }
+    .easy:hover { box-shadow: 0 0 15px #00ff99; }
+    .normal:hover { box-shadow: 0 0 15px #ffdd33; }
+    .hard:hover { box-shadow: 0 0 15px #ff4444; }
   </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div id="login" class="box">
-  <h2>Hunter Arcade</h2>
+<div class="box">
+  <h1>iHunter Game Hub</h1>
 
-  <input id="username" placeholder="Username">
-  <input id="password" type="password" placeholder="Password">
+  <button class="main-btn" onclick="toggleTetris()">Tetris</button>
 
-  <button onclick="signUp()">Sign Up</button>
-  <button onclick="signIn()">Sign In</button>
-</div>
-
-<!-- HUB -->
-<div id="hub" class="box">
-  <h2 id="welcome"></h2>
-
-  <!-- 🚫 HIDDEN CHAT BUTTON -->
-  <button id="chatBtn" style="display:none;" onclick="location.href='chat.html'">
-    Chat.Me 2
-  </button>
-
-  <button onclick="location.href='games/tetris/'">Tetris</button>
-  <button onclick="location.href='games/scramble/'">Scramble</button>
-
-  <button onclick="logout()">Logout</button>
-
-  <div id="adminPanel">
-    <h4>Users</h4>
-    <div id="userList"></div>
-
-    <div id="actionBox">
-      <h4 id="selectedUserText"></h4>
-
-      <button onclick="banUser()">Ban</button>
-      <button onclick="unbanUser()">Unban</button>
-      <button onclick="muteUser()">Mute</button>
-      <button onclick="unmuteUser()">Unmute</button>
-
-      <button onclick="closeAction()">Close</button>
-    </div>
+  <div id="tetrisOptions">
+    <button class="easy" onclick="startGame(0.5)">Easy</button>
+    <button class="normal" onclick="startGame(1)">Normal</button>
+    <button class="hard" onclick="startGame(2)">Difficult</button>
   </div>
-</div>
 
-<!-- AP BUTTON -->
-<button id="adminBtn" onclick="toggleAdmin()">AP</button>
+  <button class="main-btn" onclick="location.href='games/scramble/'">
+    Scramble
+  </button>
+</div>
 
 <script>
-
-const ADMIN = "iHunterDoesProductions";
-let selectedUser = null;
-
-/* ADMIN CHECK */
-function isAdmin(){
-  return localStorage.getItem("currentUser") === ADMIN;
+function toggleTetris(){
+  document.getElementById("tetrisOptions").classList.toggle("show");
 }
 
-/* LOGIN */
-function signUp(){
-  const u = username.value.trim();
-  const p = password.value;
-
-  if(!u || !p) return;
-
-  localStorage.setItem("user_"+u, p);
-
-  let users = JSON.parse(localStorage.getItem("users") || "[]");
-  if(!users.includes(u)){
-    users.push(u);
-    localStorage.setItem("users", JSON.stringify(users));
-  }
-
-  localStorage.setItem("currentUser", u);
-  loadHub(u);
+function startGame(speed){
+  localStorage.setItem("tetrisSpeed", speed);
+  location.href = "games/tetris/";
 }
-
-function signIn(){
-  const u = username.value.trim();
-  const p = password.value;
-
-  if(localStorage.getItem("banned_"+u) === "true"){
-    return alert("You are banned");
-  }
-
-  if(localStorage.getItem("user_"+u) !== p){
-    return alert("Wrong password");
-  }
-
-  localStorage.setItem("currentUser", u);
-  loadHub(u);
-}
-
-/* HUB */
-function loadHub(u){
-  login.style.display = "none";
-  hub.style.display = "block";
-
-  welcome.innerText = "Welcome, " + u;
-
-  if(isAdmin()){
-    adminBtn.style.display = "block";
-  }
-}
-
-/* LOGOUT */
-function logout(){
-  localStorage.removeItem("currentUser");
-  location.reload();
-}
-
-/* ADMIN PANEL */
-function toggleAdmin(){
-  if(!isAdmin()) return alert("Denied");
-
-  adminPanel.style.display =
-    adminPanel.style.display === "block" ? "none" : "block";
-
-  if(adminPanel.style.display === "block"){
-    loadUsers();
-  }
-}
-
-function loadUsers(){
-  let users = JSON.parse(localStorage.getItem("users") || "[]");
-  userList.innerHTML = "";
-
-  users.forEach(u => {
-    let div = document.createElement("div");
-    div.innerText = u;
-    div.onclick = () => selectUser(u);
-    userList.appendChild(div);
-  });
-}
-
-function selectUser(u){
-  selectedUser = u;
-  selectedUserText.innerText = "Selected: " + u;
-  actionBox.style.display = "block";
-}
-
-function closeAction(){
-  selectedUser = null;
-  actionBox.style.display = "none";
-}
-
-/* MODERATION */
-function banUser(){
-  if(!selectedUser) return;
-  localStorage.setItem("banned_" + selectedUser, "true");
-}
-
-function unbanUser(){
-  if(!selectedUser) return;
-  localStorage.removeItem("banned_" + selectedUser);
-}
-
-function muteUser(){
-  if(!selectedUser) return;
-  localStorage.setItem("muted_" + selectedUser, "true");
-}
-
-function unmuteUser(){
-  if(!selectedUser) return;
-  localStorage.removeItem("muted_" + selectedUser);
-}
-
-/* INIT */
-window.onload = () => {
-  const u = localStorage.getItem("currentUser");
-  if(u) loadHub(u);
-};
-
 </script>
 
 </body>
