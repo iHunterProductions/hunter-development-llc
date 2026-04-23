@@ -6,184 +6,95 @@
   <style>
     body {
       margin: 0;
-      background: #000;
+      background: radial-gradient(circle, #05070a, #000);
       font-family: Arial;
       color: #00ffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
 
-    .hub {
-      margin: 30px;
+    .box {
+      width: 360px;
+      border: 2px solid #00ffff;
+      padding: 25px;
+      border-radius: 14px;
+      box-shadow: 0 0 25px #00ffff;
+      text-align: center;
     }
 
-    /* MAIN BUTTON STYLE */
-    .mainBtn {
-      width: 180px;
-      padding: 10px;
-      background: #00ffff;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-      border-radius: 6px;
-      margin-bottom: 5px;
-      display: block;
+    h1 {
+      margin-bottom: 20px;
     }
 
-    .mainBtn:hover {
-      box-shadow: 0 0 12px #00ffff;
-    }
-
-    /* DROPDOWN CONTAINER */
-    .dropdown {
-      display: none;
-      margin-left: 20px;
-      margin-bottom: 10px;
-    }
-
-    .dropdown button {
-      width: 160px;
-      padding: 8px;
-      margin-top: 5px;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-      border-radius: 5px;
-      color: black;
-    }
-
-    /* DIFFICULTY COLORS */
-    .hard { background: #ff0033; }
-    .normal { background: #ffcc00; }
-    .easy { background: #00ff66; }
-
-    /* SIMPLE BUTTONS */
-    .simpleBtn {
-      width: 180px;
-      padding: 10px;
-      background: #00ffff;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-      border-radius: 6px;
+    button {
+      width: 95%;
+      padding: 12px;
       margin-top: 10px;
-      display: block;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.25s ease;
     }
 
-    .simpleBtn:hover {
-      box-shadow: 0 0 12px #00ffff;
+    .main-btn {
+      background: #00c8c8;
+      color: #001818;
     }
+
+    .main-btn:hover {
+      transform: scale(1.03);
+      box-shadow: 0 0 20px #003366;
+    }
+
+    #tetrisOptions {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+
+    #tetrisOptions.show {
+      max-height: 300px;
+    }
+
+    .easy { background: #00cc66; }
+    .normal { background: #e6c200; }
+    .hard { background: #cc3333; color: white; }
+
+    .easy:hover { box-shadow: 0 0 15px #00ff99; }
+    .normal:hover { box-shadow: 0 0 15px #ffdd33; }
+    .hard:hover { box-shadow: 0 0 15px #ff4444; }
   </style>
 </head>
 
 <body>
 
-<div class="hub">
+<div class="box">
+  <h1>iHunter Game Hub</h1>
 
-  <!-- TETRIS DROPDOWN -->
-  <button class="mainBtn" onclick="toggle('tetrisMenu')">
-    Tetris ▼
-  </button>
+  <button class="main-btn" onclick="toggleTetris()">Tetris</button>
 
-  <div id="tetrisMenu" class="dropdown">
-    <button class="hard" onclick="location.href='games/tetris/hard.html'">Hard</button>
-    <button class="normal" onclick="location.href='games/tetris/normal.html'">Normal</button>
-    <button class="easy" onclick="location.href='games/tetris/easy.html'">Easy</button>
+  <div id="tetrisOptions">
+    <button class="easy" onclick="startGame(0.5)">Easy</button>
+    <button class="normal" onclick="startGame(1)">Normal</button>
+    <button class="hard" onclick="startGame(2)">Difficult</button>
   </div>
 
-  <!-- SCRAMBLE -->
-  <button class="simpleBtn" onclick="location.href='games/scramble/index.html'">
+  <button class="main-btn" onclick="location.href='games/scramble/'">
     Scramble
   </button>
-
-  <!-- BUTTONS (GRID TOOL) -->
-  <button class="simpleBtn" onclick="openGrid()">
-    Buttons
-  </button>
-
-</div>
-
-<!-- GRID OVERLAY -->
-<div id="gridContainer" style="
-  position:fixed;
-  top:0;left:0;
-  width:100%;height:100%;
-  background:rgba(0,0,0,0.9);
-  display:none;
-  justify-content:center;
-  align-items:center;
-  flex-direction:column;
-">
-
-  <div id="grid" style="
-    display:grid;
-    grid-template-columns:repeat(16,25px);
-    grid-template-rows:repeat(16,25px);
-    gap:2px;
-    margin-bottom:20px;
-  "></div>
-
-  <button onclick="closeGrid()" style="
-    padding:10px 15px;
-    background:#ff0055;
-    border:none;
-    color:white;
-    font-weight:bold;
-    border-radius:6px;
-    cursor:pointer;
-  ">Close</button>
-
 </div>
 
 <script>
-/* DROPDOWN TOGGLE */
-function toggle(id){
-  const el = document.getElementById(id);
-  el.style.display = el.style.display === "block" ? "none" : "block";
+function toggleTetris(){
+  document.getElementById("tetrisOptions").classList.toggle("show");
 }
 
-/* GRID OPEN/CLOSE */
-function openGrid(){
-  document.getElementById("gridContainer").style.display = "flex";
-}
-function closeGrid(){
-  document.getElementById("gridContainer").style.display = "none";
-}
-
-/* GRID BUILD */
-const grid = document.getElementById("grid");
-
-const colors = [
-  "#ff0000",
-  "#ff7f00",
-  "#ffff00",
-  "#00ff00",
-  "#00ffff",
-  "#8a2be2"
-];
-
-for(let i=0;i<256;i++){
-  const cell = document.createElement("div");
-  cell.style.width = "25px";
-  cell.style.height = "25px";
-  cell.style.background = "#111";
-  cell.style.border = "1px solid #00ffff33";
-  cell.style.cursor = "pointer";
-
-  let state = 0;
-
-  cell.onclick = () => {
-    state = (state + 1) % (colors.length + 1);
-
-    if(state === 0){
-      cell.style.background = "#111";
-      cell.style.boxShadow = "none";
-    } else {
-      const c = colors[state - 1];
-      cell.style.background = c;
-      cell.style.boxShadow = `0 0 10px ${c}`;
-    }
-  };
-
-  grid.appendChild(cell);
+function startGame(speed){
+  localStorage.setItem("tetrisSpeed", speed);
+  location.href = "games/tetris/";
 }
 </script>
 
