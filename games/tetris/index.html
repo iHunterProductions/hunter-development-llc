@@ -80,6 +80,8 @@
 </div>
 
 <script>
+console.log("TETRIS LOADED OK");
+
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
@@ -114,11 +116,10 @@ const colors = [
 
 let score = 0;
 let dropCounter = 0;
+let lastTime = 0;
 
 const speedMultiplier = localStorage.getItem("tetrisSpeed") || 1;
 let dropInterval = 500 / speedMultiplier;
-
-let lastTime = 0;
 
 let nextPiece = randomPiece();
 let current = randomPiece();
@@ -137,7 +138,7 @@ function randomPiece(){
   };
 }
 
-/* COLLISION */
+/* COLLISION (UNCHANGED CORE) */
 function collide(p){
   for(let y=0;y<p.shape.length;y++){
     for(let x=0;x<p.shape[y].length;x++){
@@ -153,14 +154,6 @@ function collide(p){
   return false;
 }
 
-/* GHOST */
-function getGhost(){
-  let ghost = {...current};
-  while(!collide(ghost)) ghost.y++;
-  ghost.y--;
-  return ghost;
-}
-
 /* MERGE */
 function merge(){
   current.shape.forEach((row,y)=>{
@@ -172,7 +165,7 @@ function merge(){
   });
 }
 
-/* CLEAR */
+/* CLEAR LINES */
 function clearLines(){
   flashRows = [];
 
@@ -186,8 +179,8 @@ function clearLines(){
     flashTimer = 10;
 
     setTimeout(()=>{
-      flashRows.forEach(row=>{
-        board.splice(row,1);
+      flashRows.forEach(r=>{
+        board.splice(r,1);
         board.unshift(Array(COLS).fill(0));
       });
 
@@ -217,7 +210,7 @@ function move(dir){
   if(collide(current)) current.x -= dir;
 }
 
-/* ROTATE */
+/* ROTATE (UNCHANGED FEEL) */
 function rotate(){
   let rotated = current.shape[0].map((_,i)=>
     current.shape.map(r=>r[i]).reverse()
@@ -232,12 +225,14 @@ function rotate(){
 /* DROP */
 function drop(){
   current.y++;
+
   if(collide(current)){
     current.y--;
     merge();
     clearLines();
     spawn();
   }
+
   dropCounter = 0;
 }
 
@@ -249,7 +244,7 @@ document.addEventListener("keydown", e=>{
   if(e.key==="ArrowUp") rotate();
 });
 
-/* NEXT */
+/* NEXT PIECE */
 function drawNext(){
   nctx.clearRect(0,0,120,120);
 
@@ -269,17 +264,7 @@ function draw(){
   ctx.fillStyle = "#000";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  let ghost = getGhost();
-
-  ctx.fillStyle = "rgba(0,255,255,0.2)";
-  ghost.shape.forEach((row,y)=>{
-    row.forEach((v,x)=>{
-      if(v){
-        ctx.fillRect((ghost.x+x)*SIZE,(ghost.y+y)*SIZE,SIZE,SIZE);
-      }
-    });
-  });
-
+  /* BOARD */
   for(let y=0;y<ROWS;y++){
     for(let x=0;x<COLS;x++){
       if(board[y][x]){
@@ -291,6 +276,7 @@ function draw(){
     }
   }
 
+  /* FLASH */
   if(flashTimer > 0){
     ctx.fillStyle = "white";
     flashRows.forEach(r=>{
@@ -299,6 +285,7 @@ function draw(){
     flashTimer--;
   }
 
+  /* PIECE */
   ctx.fillStyle = current.color;
   ctx.shadowBlur = 15;
   ctx.shadowColor = current.color;
