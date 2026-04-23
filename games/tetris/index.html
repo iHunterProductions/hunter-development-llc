@@ -80,8 +80,6 @@
 </div>
 
 <script>
-console.log("TETRIS LOADED OK");
-
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
@@ -138,7 +136,7 @@ function randomPiece(){
   };
 }
 
-/* COLLISION (UNCHANGED CORE) */
+/* COLLISION */
 function collide(p){
   for(let y=0;y<p.shape.length;y++){
     for(let x=0;x<p.shape[y].length;x++){
@@ -152,6 +150,22 @@ function collide(p){
     }
   }
   return false;
+}
+
+/* 👻 GHOST PIECE */
+function getGhostPiece(){
+  let ghost = {
+    shape: current.shape,
+    x: current.x,
+    y: current.y
+  };
+
+  while(!collide(ghost)){
+    ghost.y++;
+  }
+
+  ghost.y--;
+  return ghost;
 }
 
 /* MERGE */
@@ -210,7 +224,7 @@ function move(dir){
   if(collide(current)) current.x -= dir;
 }
 
-/* ROTATE (UNCHANGED FEEL) */
+/* ROTATE */
 function rotate(){
   let rotated = current.shape[0].map((_,i)=>
     current.shape.map(r=>r[i]).reverse()
@@ -264,6 +278,23 @@ function draw(){
   ctx.fillStyle = "#000";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
+  /* 👻 GHOST RENDER */
+  let ghost = getGhostPiece();
+
+  ctx.fillStyle = "rgba(0,255,255,0.25)";
+  ghost.shape.forEach((row,y)=>{
+    row.forEach((v,x)=>{
+      if(v){
+        ctx.fillRect(
+          (ghost.x + x) * SIZE,
+          (ghost.y + y) * SIZE,
+          SIZE,
+          SIZE
+        );
+      }
+    });
+  });
+
   /* BOARD */
   for(let y=0;y<ROWS;y++){
     for(let x=0;x<COLS;x++){
@@ -285,7 +316,7 @@ function draw(){
     flashTimer--;
   }
 
-  /* PIECE */
+  /* CURRENT PIECE */
   ctx.fillStyle = current.color;
   ctx.shadowBlur = 15;
   ctx.shadowColor = current.color;
@@ -293,7 +324,12 @@ function draw(){
   current.shape.forEach((row,y)=>{
     row.forEach((v,x)=>{
       if(v){
-        ctx.fillRect((current.x+x)*SIZE,(current.y+y)*SIZE,SIZE,SIZE);
+        ctx.fillRect(
+          (current.x+x)*SIZE,
+          (current.y+y)*SIZE,
+          SIZE,
+          SIZE
+        );
       }
     });
   });
