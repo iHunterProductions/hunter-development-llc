@@ -17,7 +17,7 @@
 
     #container {
       display: flex;
-      gap: 20px;
+      gap: 30px;
       align-items: center;
     }
 
@@ -27,6 +27,7 @@
     }
 
     #side {
+      width: 120px;
       text-align: center;
     }
 
@@ -34,12 +35,8 @@
       width: 100px;
       height: 100px;
       background: #111;
-      margin-top: 10px;
       box-shadow: 0 0 15px cyan;
-    }
-
-    h3 {
-      margin: 5px 0;
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -47,7 +44,7 @@
 <body>
 
 <div id="container">
-  <canvas id="game" width="240" height="400"></canvas>
+  <canvas id="game" width="300" height="600"></canvas>
 
   <div id="side">
     <h3>Tetris</h3>
@@ -71,7 +68,7 @@ const scoreEl = document.getElementById("score");
 
 const COLS = 10;
 const ROWS = 20;
-const SIZE = 20;
+const SIZE = 30;
 
 const speedMultiplier = localStorage.getItem("tetrisSpeed") || 1;
 let dropInterval = 1000 / speedMultiplier;
@@ -107,13 +104,19 @@ function getGhostY(){
   return ghostY;
 }
 
-/* 💥 COLLISION */
+/* 💥 COLLISION (FIXED) */
 function collision(x,y){
   return piece.shape.some((row,dy)=>
     row.some((val,dx)=>{
-      let nx = x+dx;
-      let ny = y+dy;
-      return val && (ny>=ROWS || board[ny][nx]);
+      if(!val) return false;
+
+      let nx = x + dx;
+      let ny = y + dy;
+
+      if(nx < 0 || nx >= COLS || ny >= ROWS) return true;
+      if(ny < 0) return false;
+
+      return board[ny][nx];
     })
   );
 }
@@ -124,8 +127,10 @@ function drawBlock(ctx,x,y,color,glow){
     ctx.shadowBlur = 15;
     ctx.shadowColor = color;
   }
+
   ctx.fillStyle = color;
   ctx.fillRect(x,y,SIZE,SIZE);
+
   ctx.shadowBlur = 0;
 }
 
@@ -143,7 +148,7 @@ function draw(){
     }
   }
 
-  /* GHOST */
+  /* 👻 GHOST */
   let ghostY = getGhostY();
   piece.shape.forEach((row,dy)=>{
     row.forEach((val,dx)=>{
@@ -162,7 +167,7 @@ function draw(){
     });
   });
 
-  /* LINE FLASH */
+  /* 💥 LINE FLASH */
   clearingRows.forEach(row=>{
     ctx.fillStyle="white";
     ctx.fillRect(0,row*SIZE,canvas.width,SIZE);
@@ -193,7 +198,7 @@ function merge(){
   });
 }
 
-/* 💥 CLEAR LINES + SCORE */
+/* 💥 CLEAR LINES */
 function checkLines(){
   clearingRows = [];
   let lines = 0;
