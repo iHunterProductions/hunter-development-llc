@@ -6,103 +6,95 @@
   <style>
     body {
       margin: 0;
-      background: #000;
+      background: radial-gradient(circle, #05070a, #000);
       font-family: Arial;
       color: #00ffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
 
-    .hub {
-      margin: 30px;
+    .box {
+      width: 360px;
+      border: 2px solid #00ffff;
+      padding: 25px;
+      border-radius: 14px;
+      box-shadow: 0 0 25px #00ffff;
+      text-align: center;
     }
 
-    .mainBtn {
-      width: 180px;
-      padding: 10px;
-      background: #00ffff;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-      border-radius: 6px;
-      margin-bottom: 6px;
-      display: block;
-      color: black;
+    h1 {
+      margin-bottom: 20px;
     }
 
-    .mainBtn:hover {
-      box-shadow: 0 0 12px #00ffff;
-    }
-
-    .dropdown {
-      display: none;
-      margin-left: 20px;
-      margin-bottom: 10px;
-    }
-
-    .dropdown button {
-      width: 160px;
-      padding: 8px;
-      margin-top: 5px;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-      border-radius: 5px;
-      color: black;
-    }
-
-    .hard { background: #ff0033; }
-    .normal { background: #ffcc00; }
-    .easy { background: #00ff66; }
-
-    .simpleBtn {
-      width: 180px;
-      padding: 10px;
-      background: #00ffff;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-      border-radius: 6px;
+    button {
+      width: 95%;
+      padding: 12px;
       margin-top: 10px;
-      display: block;
-      color: black;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.25s ease;
     }
 
-    .simpleBtn:hover {
-      box-shadow: 0 0 12px #00ffff;
+    .main-btn {
+      background: #00c8c8;
+      color: #001818;
     }
+
+    .main-btn:hover {
+      transform: scale(1.03);
+      box-shadow: 0 0 20px #003366;
+    }
+
+    #tetrisOptions {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+
+    #tetrisOptions.show {
+      max-height: 300px;
+    }
+
+    .easy { background: #00cc66; }
+    .normal { background: #e6c200; }
+    .hard { background: #cc3333; color: white; }
+
+    .easy:hover { box-shadow: 0 0 15px #00ff99; }
+    .normal:hover { box-shadow: 0 0 15px #ffdd33; }
+    .hard:hover { box-shadow: 0 0 15px #ff4444; }
   </style>
 </head>
 
 <body>
 
-<div class="hub">
+<div class="box">
+  <h1>iHunter Game Hub</h1>
 
-  <!-- TETRIS -->
-  <button class="mainBtn" onclick="toggle('tetrisMenu')">
-    Tetris ▼
-  </button>
+  <button class="main-btn" onclick="toggleTetris()">Tetris</button>
 
-  <div id="tetrisMenu" class="dropdown">
-    <button class="hard" onclick="location.href='games/tetris/hard.html'">Hard</button>
-    <button class="normal" onclick="location.href='games/tetris/normal.html'">Normal</button>
-    <button class="easy" onclick="location.href='games/tetris/easy.html'">Easy</button>
+  <div id="tetrisOptions">
+    <button class="easy" onclick="startGame(0.5)">Easy</button>
+    <button class="normal" onclick="startGame(1)">Normal</button>
+    <button class="hard" onclick="startGame(2)">Difficult</button>
   </div>
 
-  <!-- SCRAMBLE -->
-  <button class="simpleBtn" onclick="location.href='games/scramble/index.html'">
+  <button class="main-btn" onclick="location.href='games/scramble/'">
     Scramble
   </button>
-
-  <!-- BUTTONS (ADDED EXACTLY AS REQUESTED) -->
-  <button class="simpleBtn" onclick="location.href='games/grid/index.html'">
-    Buttons
-  </button>
-
 </div>
 
 <script>
-function toggle(id){
-  const el = document.getElementById(id);
-  el.style.display = el.style.display === "block" ? "none" : "block";
+function toggleTetris(){
+  document.getElementById("tetrisOptions").classList.toggle("show");
+}
+
+function startGame(speed){
+  localStorage.setItem("tetrisSpeed", speed);
+  location.href = "games/tetris/";
 }
 </script>
 
