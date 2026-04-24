@@ -49,17 +49,6 @@
       box-shadow: 0 0 20px #003366;
     }
 
-    /* NEW WHITE BUTTON STYLE */
-    .white-btn {
-      background: #ffffff;
-      color: #000;
-    }
-
-    .white-btn:hover {
-      transform: scale(1.03);
-      box-shadow: 0 0 15px #ffffff;
-    }
-
     #tetrisOptions {
       max-height: 0;
       overflow: hidden;
@@ -77,6 +66,16 @@
     .easy:hover { box-shadow: 0 0 15px #00ff99; }
     .normal:hover { box-shadow: 0 0 15px #ffdd33; }
     .hard:hover { box-shadow: 0 0 15px #ff4444; }
+
+    .white-btn {
+      background: #ffffff;
+      color: #000;
+    }
+
+    .white-btn:hover {
+      transform: scale(1.03);
+      box-shadow: 0 0 15px #ffffff;
+    }
   </style>
 </head>
 
@@ -85,10 +84,11 @@
 <div class="box">
   <h1>iHunter Game Hub</h1>
 
-  <!-- NEW BUTTONS (ADDED ABOVE TETRIS) -->
-  <button class="white-btn">Rules</button>
-  <button class="white-btn">Update Logs</button>
+  <!-- NEW: RULES + LOGS (NOW WORKING) -->
+  <button class="white-btn" onclick="location.href='rules/'">Rules</button>
+  <button class="white-btn" onclick="location.href='logs/'">Update Logs</button>
 
+  <!-- TETRIS -->
   <button class="main-btn" onclick="toggleTetris()">Tetris</button>
 
   <div id="tetrisOptions">
@@ -97,6 +97,7 @@
     <button class="hard" onclick="startGame(2)">Difficult</button>
   </div>
 
+  <!-- SCRAMBLE -->
   <button class="main-btn" onclick="location.href='games/scramble/'">
     Scramble
   </button>
