@@ -49,6 +49,17 @@
       box-shadow: 0 0 20px #003366;
     }
 
+    /* NEW WHITE BUTTON STYLE */
+    .white-btn {
+      background: #ffffff;
+      color: #000;
+    }
+
+    .white-btn:hover {
+      transform: scale(1.03);
+      box-shadow: 0 0 15px #ffffff;
+    }
+
     #tetrisOptions {
       max-height: 0;
       overflow: hidden;
@@ -73,6 +84,10 @@
 
 <div class="box">
   <h1>iHunter Game Hub</h1>
+
+  <!-- NEW BUTTONS (ADDED ABOVE TETRIS) -->
+  <button class="white-btn">Rules</button>
+  <button class="white-btn">Update Logs</button>
 
   <button class="main-btn" onclick="toggleTetris()">Tetris</button>
 
