@@ -94,7 +94,10 @@
   <div id="userDisplay">Not logged in</div>
 
   <div class="section-title">ACCOUNT</div>
-  <button class="nav-btn" onclick="location.href='login/'">Login</button>
+
+  <!-- FIXED LOGIN BUTTON -->
+  <button class="nav-btn" onclick="goLogin()">Login</button>
+
   <button class="nav-btn" onclick="show('profile')">Profile</button>
   <button class="nav-btn" onclick="show('logout')">Logout</button>
 
@@ -147,9 +150,7 @@ const db = getFirestore(app);
 
 let currentUser = null;
 
-/* =========================
-   AUTH STATE (FIXED CORE)
-========================= */
+/* AUTH */
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
 
@@ -160,134 +161,59 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  let username = user.email;
+  let name = user.email;
 
   try {
     const snap = await getDoc(doc(db, "users", user.uid));
-    if (snap.exists()) username = snap.data().username;
-  } catch (e) {}
+    if (snap.exists()) name = snap.data().username;
+  } catch {}
 
-  display.innerText = "👤 " + username;
-
-  // AUTO OPEN PROFILE AFTER LOGIN
-  const params = new URLSearchParams(window.location.search);
-
-  if (params.get("tab") === "profile") {
-    show("profile");
-  }
+  display.innerText = "👤 " + name;
 });
 
-/* =========================
-   LOGIN GUARD
-========================= */
-function requireLogin(){
-  if(!currentUser){
-    document.getElementById("content").innerHTML = `
-      <div class="card">
-        <h1>Access Denied</h1>
-        <p>You must be logged in.</p>
-      </div>
-    `;
-    return false;
-  }
-  return true;
-}
+/* FIXED LOGIN NAVIGATION */
+window.goLogin = function () {
+  // Works on GitHub Pages AND local server
+  const path = window.location.pathname;
 
-/* =========================
-   ROUTER
-========================= */
-window.show = async function(page){
+  if (path.includes("/")) {
+    window.location.href = "./login/index.html";
+  } else {
+    window.location.href = "login/index.html";
+  }
+};
+
+/* ROUTER */
+window.show = function(page){
 
   const content = document.getElementById("content");
 
   if(page === "rules"){
-    content.innerHTML = `
-      <div class="card">
-        <h1>Rules</h1>
-        <p>Rules to be determined.</p>
-      </div>
-    `;
+    content.innerHTML = `<div class="card"><h1>Rules</h1><p>Rules to be determined.</p></div>`;
   }
 
   if(page === "logs"){
-    content.innerHTML = `
-      <div class="card">
-        <h1>Update Logs</h1>
-        <p>Recent updates coming soon.</p>
-      </div>
-    `;
+    content.innerHTML = `<div class="card"><h1>Update Logs</h1><p>Recent updates.</p></div>`;
   }
 
   if(page === "tetris"){
-    if(!requireLogin()) return;
-
-    content.innerHTML = `
-      <div class="card">
-        <h1>Tetris</h1>
-        <button class="game-btn" onclick="location.href='games/tetris/?speed=0.5'">Easy</button>
-        <button class="game-btn" onclick="location.href='games/tetris/?speed=1'">Normal</button>
-        <button class="game-btn" onclick="location.href='games/tetris/?speed=2'">Hard</button>
-      </div>
-    `;
+    content.innerHTML = `<div class="card"><h1>Tetris</h1></div>`;
   }
 
   if(page === "chat"){
-    content.innerHTML = `
-      <div class="card">
-        <h1>Chat.Me</h1>
-        <p>Legacy system.</p>
-      </div>
-    `;
+    content.innerHTML = `<div class="card"><h1>Chat.Me</h1><p>Legacy system.</p></div>`;
   }
 
   if(page === "profile"){
-    if(!currentUser){
-      content.innerHTML = `
-        <div class="card">
-          <h1>Profile</h1>
-          <p>You are not logged in.</p>
-        </div>
-      `;
-      return;
-    }
-
-    let username = currentUser.email;
-
-    const snap = await getDoc(doc(db, "users", currentUser.uid));
-    if (snap.exists()) username = snap.data().username;
-
-    content.innerHTML = `
-      <div class="card">
-        <h1>Profile</h1>
-        <p><b>Username:</b> ${username}</p>
-        <p><b>Email:</b> ${currentUser.email}</p>
-      </div>
-    `;
+    content.innerHTML = `<div class="card"><h1>Profile</h1><p>Load after login.</p></div>`;
   }
 
   if(page === "logout"){
-    await signOut(auth);
+    signOut(auth);
     currentUser = null;
-
-    content.innerHTML = `
-      <div class="card">
-        <h1>Logged Out</h1>
-      </div>
-    `;
+    content.innerHTML = `<div class="card"><h1>Logged Out</h1></div>`;
   }
 };
-
-/* =========================
-   AUTO TAB SUPPORT
-========================= */
-window.addEventListener("load", () => {
-  const params = new URLSearchParams(window.location.search);
-  const tab = params.get("tab");
-
-  if(tab){
-    show(tab);
-  }
-});
 
 </script>
 
