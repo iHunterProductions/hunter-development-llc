@@ -12,6 +12,7 @@
       overflow: hidden;
     }
 
+    /* SIDEBAR */
     .sidebar {
       width: 260px;
       background: #000;
@@ -19,7 +20,6 @@
       display: flex;
       flex-direction: column;
       padding: 20px;
-      box-shadow: 2px 0 20px rgba(0,0,0,0.6);
     }
 
     .logo {
@@ -54,6 +54,7 @@
       color: #00ffff;
     }
 
+    /* CONTENT */
     .content {
       flex: 1;
       background: #f5f5f5;
@@ -101,21 +102,34 @@
 
 <body>
 
+<!-- SIDEBAR -->
 <div class="sidebar">
+
   <div class="logo">☯ iHunter Game Hub</div>
 
+  <!-- ACCOUNT -->
+  <div class="section-title">ACCOUNT</div>
+  <button class="nav-btn" onclick="location.href='login/'">Login</button>
+  <button class="nav-btn" onclick="show('profile')">Profile</button>
+  <button class="nav-btn" onclick="show('logout')">Logout</button>
+
+  <!-- INFO -->
   <div class="section-title">INFO</div>
   <button class="nav-btn" onclick="show('rules')">Rules</button>
   <button class="nav-btn" onclick="show('logs')">Update Logs</button>
 
+  <!-- GAMES -->
   <div class="section-title">GAMES</div>
   <button class="nav-btn" onclick="show('tetris')">Tetris</button>
   <button class="nav-btn" onclick="location.href='games/scramble/'">Scramble</button>
 
+  <!-- LEGACY -->
   <div class="section-title">LEGACY</div>
   <button class="nav-btn" onclick="show('chat')">Chat.Me</button>
+
 </div>
 
+<!-- CONTENT -->
 <div class="content" id="content">
   <div class="card">
     <h1>Welcome</h1>
@@ -167,11 +181,29 @@ I, Hunter, would also like to say that we are currently still working on trying 
       <div class="card">
         <h1>Chat.Me</h1>
         <p>
-          Chat.Me is a legacy project within the iHunter ecosystem. It represents earlier development stages of our communication system and is currently not active.
+          Chat.Me is a legacy project within the iHunter ecosystem. It represents earlier development stages and is currently not active.
         </p>
         <p class="muted">
           Status: Legacy (Inactive)
         </p>
+      </div>
+    `;
+  }
+
+  if(page === "profile"){
+    content.innerHTML = `
+      <div class="card">
+        <h1>Profile</h1>
+        <p>Profile system coming soon.</p>
+      </div>
+    `;
+  }
+
+  if(page === "logout"){
+    content.innerHTML = `
+      <div class="card">
+        <h1>Logout</h1>
+        <p>Logout system coming soon.</p>
       </div>
     `;
   }
