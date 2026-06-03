@@ -6,111 +6,174 @@
   <style>
     body {
       margin: 0;
-      background: radial-gradient(circle, #05070a, #000);
       font-family: Arial;
-      color: #00ffff;
       display: flex;
-      justify-content: center;
-      align-items: center;
       height: 100vh;
+      overflow: hidden;
     }
 
-    .box {
-      width: 360px;
-      border: 2px solid #00ffff;
+    /* LEFT SIDEBAR */
+    .sidebar {
+      width: 260px;
+      background: #000;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      box-shadow: 2px 0 20px rgba(0,0,0,0.6);
+    }
+
+    .logo {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 25px;
+      color: #00c8c8;
+    }
+
+    .section-title {
+      margin-top: 15px;
+      font-size: 12px;
+      opacity: 0.6;
+      letter-spacing: 1px;
+    }
+
+    .nav-btn {
+      background: none;
+      border: none;
+      color: white;
+      text-align: left;
+      padding: 10px;
+      margin-top: 5px;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: 0.2s;
+      font-size: 14px;
+    }
+
+    .nav-btn:hover {
+      background: rgba(0,200,200,0.2);
+      color: #00ffff;
+    }
+
+    /* RIGHT CONTENT AREA (YIN-YANG LIGHT SIDE) */
+    .content {
+      flex: 1;
+      background: #f5f5f5;
+      color: #111;
+      padding: 40px;
+      overflow-y: auto;
+    }
+
+    .card {
+      background: white;
       padding: 25px;
-      border-radius: 14px;
-      box-shadow: 0 0 25px #00ffff;
-      text-align: center;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      max-width: 700px;
     }
 
     h1 {
-      margin-bottom: 20px;
+      margin-top: 0;
     }
 
-    button {
-      width: 95%;
-      padding: 12px;
+    .game-btn {
+      display: block;
+      width: 200px;
       margin-top: 10px;
+      padding: 12px;
       border: none;
       border-radius: 8px;
       cursor: pointer;
       font-weight: bold;
-      transition: 0.25s ease;
-    }
-
-    .main-btn {
       background: #00c8c8;
-      color: #001818;
+      color: black;
+      transition: 0.2s;
     }
 
-    .main-btn:hover {
+    .game-btn:hover {
+      box-shadow: 0 0 10px #00c8c8;
       transform: scale(1.03);
-      box-shadow: 0 0 20px #003366;
     }
 
-    #tetrisOptions {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.4s ease;
-    }
-
-    #tetrisOptions.show {
-      max-height: 300px;
-    }
-
-    .easy { background: #00cc66; }
-    .normal { background: #e6c200; }
-    .hard { background: #cc3333; color: white; }
-
-    .easy:hover { box-shadow: 0 0 15px #00ff99; }
-    .normal:hover { box-shadow: 0 0 15px #ffdd33; }
-    .hard:hover { box-shadow: 0 0 15px #ff4444; }
-
-    .white-btn {
-      background: #ffffff;
-      color: #000;
-    }
-
-    .white-btn:hover {
-      transform: scale(1.03);
-      box-shadow: 0 0 15px #ffffff;
+    .muted {
+      opacity: 0.7;
     }
   </style>
 </head>
 
 <body>
 
-<div class="box">
-  <h1>iHunter Game Hub</h1>
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="logo">☯ iHunter Game Hub</div>
 
-  <!-- NEW: RULES + LOGS (NOW WORKING) -->
-  <button class="white-btn" onclick="location.href='rules/'">Rules</button>
-  <button class="white-btn" onclick="location.href='logs/'">Update Logs</button>
+  <div class="section-title">INFO</div>
+  <button class="nav-btn" onclick="show('rules')">Rules</button>
+  <button class="nav-btn" onclick="show('logs')">Update Logs</button>
 
-  <!-- TETRIS -->
-  <button class="main-btn" onclick="toggleTetris()">Tetris</button>
+  <div class="section-title">GAMES</div>
+  <button class="nav-btn" onclick="show('tetris')">Tetris</button>
+  <button class="nav-btn" onclick="location.href='games/scramble/'">Scramble</button>
 
-  <div id="tetrisOptions">
-    <button class="easy" onclick="startGame(0.5)">Easy</button>
-    <button class="normal" onclick="startGame(1)">Normal</button>
-    <button class="hard" onclick="startGame(2)">Difficult</button>
+  <div class="section-title">FUTURE</div>
+  <button class="nav-btn" onclick="show('chat')">Chat.Me</button>
+</div>
+
+<!-- CONTENT -->
+<div class="content" id="content">
+  <div class="card">
+    <h1>Welcome</h1>
+    <p class="muted">Select something from the sidebar to begin.</p>
   </div>
-
-  <!-- SCRAMBLE -->
-  <button class="main-btn" onclick="location.href='games/scramble/'">
-    Scramble
-  </button>
 </div>
 
 <script>
-function toggleTetris(){
-  document.getElementById("tetrisOptions").classList.toggle("show");
-}
+function show(page){
+  const content = document.getElementById("content");
 
-function startGame(speed){
-  localStorage.setItem("tetrisSpeed", speed);
-  location.href = "games/tetris/";
+  if(page === "rules"){
+    content.innerHTML = `
+      <div class="card">
+        <h1>Rules</h1>
+        <p>Rules to be determined.</p>
+      </div>
+    `;
+  }
+
+  if(page === "logs"){
+    content.innerHTML = `
+      <div class="card">
+        <h1>Update Logs</h1>
+        <p>
+Recent update!
+
+We have added a rules button, update logs, and we have added 2 different versions of tetris for beginners and more advanced users!
+
+I, Hunter, would also like to say that we are currently still working on trying to get Chat.Me able to happen. We have been talking to counselors, tech officials here at Genoa, and more. It is only a matter of talking to BC.
+        </p>
+      </div>
+    `;
+  }
+
+  if(page === "tetris"){
+    content.innerHTML = `
+      <div class="card">
+        <h1>Tetris</h1>
+        <button class="game-btn" onclick="location.href='games/tetris/?speed=0.5'">Easy</button>
+        <button class="game-btn" onclick="location.href='games/tetris/?speed=1'">Normal</button>
+        <button class="game-btn" onclick="location.href='games/tetris/?speed=2'">Difficult</button>
+      </div>
+    `;
+  }
+
+  if(page === "chat"){
+    content.innerHTML = `
+      <div class="card">
+        <h1>Chat.Me</h1>
+        <p class="muted">Currently in development.</p>
+      </div>
+    `;
+  }
 }
 </script>
 
