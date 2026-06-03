@@ -30,8 +30,8 @@
 
     #userDisplay {
       font-size: 13px;
-      opacity: 0.8;
-      margin-bottom: 20px;
+      opacity: 0.85;
+      margin-bottom: 18px;
     }
 
     .section-title {
@@ -50,8 +50,8 @@
       margin-top: 5px;
       cursor: pointer;
       border-radius: 6px;
-      transition: 0.2s;
       font-size: 14px;
+      transition: 0.2s;
     }
 
     .nav-btn:hover {
@@ -75,14 +75,6 @@
       max-width: 700px;
     }
 
-    h1 {
-      margin-top: 0;
-    }
-
-    .muted {
-      opacity: 0.7;
-    }
-
     .game-btn {
       display: block;
       width: 200px;
@@ -94,12 +86,6 @@
       font-weight: bold;
       background: #00c8c8;
       color: black;
-      transition: 0.2s;
-    }
-
-    .game-btn:hover {
-      box-shadow: 0 0 10px #00c8c8;
-      transform: scale(1.03);
     }
   </style>
 </head>
@@ -107,36 +93,30 @@
 <body>
 
 <div class="sidebar">
-
   <div class="logo">☯ iHunter Game Hub</div>
   <div id="userDisplay">Not logged in</div>
 
-  <!-- ACCOUNT -->
   <div class="section-title">ACCOUNT</div>
   <button class="nav-btn" onclick="location.href='login/'">Login</button>
   <button class="nav-btn" onclick="show('profile')">Profile</button>
   <button class="nav-btn" onclick="show('logout')">Logout</button>
 
-  <!-- INFO -->
   <div class="section-title">INFO</div>
   <button class="nav-btn" onclick="show('rules')">Rules</button>
   <button class="nav-btn" onclick="show('logs')">Update Logs</button>
 
-  <!-- GAMES -->
   <div class="section-title">GAMES</div>
   <button class="nav-btn" onclick="show('tetris')">Tetris</button>
   <button class="nav-btn" onclick="location.href='games/scramble/'">Scramble</button>
 
-  <!-- LEGACY -->
   <div class="section-title">LEGACY</div>
   <button class="nav-btn" onclick="show('chat')">Chat.Me</button>
-
 </div>
 
 <div class="content" id="content">
   <div class="card">
     <h1>Welcome</h1>
-    <p class="muted">Select something from the sidebar to begin.</p>
+    <p>Select something from the sidebar.</p>
   </div>
 </div>
 
@@ -170,17 +150,26 @@ const db = getFirestore(app);
 
 let currentUser = null;
 
-/* AUTH STATE TRACKING */
+/* AUTH STATE */
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
 
   const display = document.getElementById("userDisplay");
 
-  if (user) {
-    display.innerText = "Logged in: " + user.email;
-  } else {
+  if (!user) {
     display.innerText = "Not logged in";
+    return;
   }
+
+  const snap = await getDoc(doc(db, "users", user.uid));
+
+  let name = user.email;
+
+  if (snap.exists()) {
+    name = snap.data().username;
+  }
+
+  display.innerText = "👤 " + name;
 });
 
 /* LOGIN GUARD */
@@ -197,7 +186,7 @@ function requireLogin(){
   return true;
 }
 
-/* MAIN ROUTER */
+/* ROUTER */
 window.show = async function(page){
 
   const content = document.getElementById("content");
@@ -215,13 +204,7 @@ window.show = async function(page){
     content.innerHTML = `
       <div class="card">
         <h1>Update Logs</h1>
-        <p>
-Recent update!
-
-We have added a rules button, update logs, and two versions of Tetris.
-
-Chat.Me is still in legacy development.
-        </p>
+        <p>Recent update notes...</p>
       </div>
     `;
   }
@@ -234,7 +217,7 @@ Chat.Me is still in legacy development.
         <h1>Tetris</h1>
         <button class="game-btn" onclick="location.href='games/tetris/?speed=0.5'">Easy</button>
         <button class="game-btn" onclick="location.href='games/tetris/?speed=1'">Normal</button>
-        <button class="game-btn" onclick="location.href='games/tetris/?speed=2'">Difficult</button>
+        <button class="game-btn" onclick="location.href='games/tetris/?speed=2'">Hard</button>
       </div>
     `;
   }
@@ -243,8 +226,7 @@ Chat.Me is still in legacy development.
     content.innerHTML = `
       <div class="card">
         <h1>Chat.Me</h1>
-        <p>Legacy system. Not active.</p>
-        <p class="muted">Status: Archived</p>
+        <p>Legacy system.</p>
       </div>
     `;
   }
@@ -252,10 +234,9 @@ Chat.Me is still in legacy development.
   if(page === "profile"){
     if(!requireLogin()) return;
 
-    const docRef = doc(db, "users", currentUser.uid);
-    const snap = await getDoc(docRef);
+    const snap = await getDoc(doc(db, "users", currentUser.uid));
 
-    let username = snap.exists() ? snap.data().username : "Unknown";
+    const username = snap.exists() ? snap.data().username : "Unknown";
 
     content.innerHTML = `
       <div class="card">
@@ -273,11 +254,18 @@ Chat.Me is still in legacy development.
     content.innerHTML = `
       <div class="card">
         <h1>Logged Out</h1>
-        <p>You have been logged out successfully.</p>
       </div>
     `;
   }
 };
+
+/* AUTO OPEN PROFILE FROM LOGIN */
+window.addEventListener("load", () => {
+  const params = new URLSearchParams(window.location.search);
+  if(params.get("tab")){
+    show(params.get("tab"));
+  }
+});
 
 </script>
 
