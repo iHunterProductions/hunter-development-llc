@@ -38,7 +38,6 @@
       margin-top: 15px;
       font-size: 12px;
       opacity: 0.6;
-      letter-spacing: 1px;
     }
 
     .nav-btn {
@@ -51,7 +50,6 @@
       cursor: pointer;
       border-radius: 6px;
       font-size: 14px;
-      transition: 0.2s;
     }
 
     .nav-btn:hover {
@@ -62,7 +60,6 @@
     .content {
       flex: 1;
       background: #f5f5f5;
-      color: #111;
       padding: 40px;
       overflow-y: auto;
     }
@@ -71,8 +68,8 @@
       background: white;
       padding: 25px;
       border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
       max-width: 700px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
     }
 
     .game-btn {
@@ -150,7 +147,9 @@ const db = getFirestore(app);
 
 let currentUser = null;
 
-/* AUTH STATE */
+/* =========================
+   AUTH STATE (FIXED CORE)
+========================= */
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
 
@@ -161,18 +160,26 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  const snap = await getDoc(doc(db, "users", user.uid));
+  let username = user.email;
 
-  let name = user.email;
+  try {
+    const snap = await getDoc(doc(db, "users", user.uid));
+    if (snap.exists()) username = snap.data().username;
+  } catch (e) {}
 
-  if (snap.exists()) {
-    name = snap.data().username;
+  display.innerText = "👤 " + username;
+
+  // AUTO OPEN PROFILE AFTER LOGIN
+  const params = new URLSearchParams(window.location.search);
+
+  if (params.get("tab") === "profile") {
+    show("profile");
   }
-
-  display.innerText = "👤 " + name;
 });
 
-/* LOGIN GUARD */
+/* =========================
+   LOGIN GUARD
+========================= */
 function requireLogin(){
   if(!currentUser){
     document.getElementById("content").innerHTML = `
@@ -186,7 +193,9 @@ function requireLogin(){
   return true;
 }
 
-/* ROUTER */
+/* =========================
+   ROUTER
+========================= */
 window.show = async function(page){
 
   const content = document.getElementById("content");
@@ -204,7 +213,7 @@ window.show = async function(page){
     content.innerHTML = `
       <div class="card">
         <h1>Update Logs</h1>
-        <p>Recent update notes...</p>
+        <p>Recent updates coming soon.</p>
       </div>
     `;
   }
@@ -232,11 +241,20 @@ window.show = async function(page){
   }
 
   if(page === "profile"){
-    if(!requireLogin()) return;
+    if(!currentUser){
+      content.innerHTML = `
+        <div class="card">
+          <h1>Profile</h1>
+          <p>You are not logged in.</p>
+        </div>
+      `;
+      return;
+    }
+
+    let username = currentUser.email;
 
     const snap = await getDoc(doc(db, "users", currentUser.uid));
-
-    const username = snap.exists() ? snap.data().username : "Unknown";
+    if (snap.exists()) username = snap.data().username;
 
     content.innerHTML = `
       <div class="card">
@@ -259,11 +277,15 @@ window.show = async function(page){
   }
 };
 
-/* AUTO OPEN PROFILE FROM LOGIN */
+/* =========================
+   AUTO TAB SUPPORT
+========================= */
 window.addEventListener("load", () => {
   const params = new URLSearchParams(window.location.search);
-  if(params.get("tab")){
-    show(params.get("tab"));
+  const tab = params.get("tab");
+
+  if(tab){
+    show(tab);
   }
 });
 
