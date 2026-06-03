@@ -71,19 +71,6 @@
       max-width: 700px;
       box-shadow: 0 0 15px rgba(0,0,0,0.1);
     }
-
-    .game-btn {
-      display: block;
-      width: 200px;
-      margin-top: 10px;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-      background: #00c8c8;
-      color: black;
-    }
   </style>
 </head>
 
@@ -96,7 +83,9 @@
   <div class="section-title">ACCOUNT</div>
 
   <!-- FIXED LOGIN BUTTON -->
-  <button class="nav-btn" onclick="goLogin()">Login</button>
+  <button class="nav-btn" onclick="openLogin()">
+    Login
+  </button>
 
   <button class="nav-btn" onclick="show('profile')">Profile</button>
   <button class="nav-btn" onclick="show('logout')">Logout</button>
@@ -171,16 +160,9 @@ onAuthStateChanged(auth, async (user) => {
   display.innerText = "👤 " + name;
 });
 
-/* FIXED LOGIN NAVIGATION */
-window.goLogin = function () {
-  // Works on GitHub Pages AND local server
-  const path = window.location.pathname;
-
-  if (path.includes("/")) {
-    window.location.href = "./login/index.html";
-  } else {
-    window.location.href = "login/index.html";
-  }
+/* 🔥 FIXED LOGIN NAVIGATION (NO FAIL POSSIBLE) */
+window.openLogin = function () {
+  window.location.href = "./login/index.html";
 };
 
 /* ROUTER */
@@ -201,11 +183,11 @@ window.show = function(page){
   }
 
   if(page === "chat"){
-    content.innerHTML = `<div class="card"><h1>Chat.Me</h1><p>Legacy system.</p></div>`;
+    content.innerHTML = `<div class="card"><h1>Chat.Me</h1></div>`;
   }
 
   if(page === "profile"){
-    content.innerHTML = `<div class="card"><h1>Profile</h1><p>Load after login.</p></div>`;
+    content.innerHTML = `<div class="card"><h1>Profile</h1></div>`;
   }
 
   if(page === "logout"){
