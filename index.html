@@ -12,7 +12,6 @@
       overflow: hidden;
     }
 
-    /* SIDEBAR */
     .sidebar {
       width: 260px;
       background: #000;
@@ -25,8 +24,14 @@
     .logo {
       font-size: 20px;
       font-weight: bold;
-      margin-bottom: 25px;
+      margin-bottom: 10px;
       color: #00c8c8;
+    }
+
+    #userDisplay {
+      font-size: 13px;
+      opacity: 0.8;
+      margin-bottom: 20px;
     }
 
     .section-title {
@@ -54,7 +59,6 @@
       color: #00ffff;
     }
 
-    /* CONTENT */
     .content {
       flex: 1;
       background: #f5f5f5;
@@ -102,10 +106,10 @@
 
 <body>
 
-<!-- SIDEBAR -->
 <div class="sidebar">
 
   <div class="logo">☯ iHunter Game Hub</div>
+  <div id="userDisplay">Not logged in</div>
 
   <!-- ACCOUNT -->
   <div class="section-title">ACCOUNT</div>
@@ -129,7 +133,6 @@
 
 </div>
 
-<!-- CONTENT -->
 <div class="content" id="content">
   <div class="card">
     <h1>Welcome</h1>
@@ -137,8 +140,66 @@
   </div>
 </div>
 
-<script>
-function show(page){
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAHgQJtwtBZ2C_5R_BJDa0rTSogX-zMG_8",
+  authDomain: "ihunter-game-hub.firebaseapp.com",
+  projectId: "ihunter-game-hub",
+  storageBucket: "ihunter-game-hub.firebasestorage.app",
+  messagingSenderId: "174875617061",
+  appId: "1:174875617061:web:c1d0e8eeba5a62a33e9ccc"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser = null;
+
+/* AUTH STATE TRACKING */
+onAuthStateChanged(auth, async (user) => {
+  currentUser = user;
+
+  const display = document.getElementById("userDisplay");
+
+  if (user) {
+    display.innerText = "Logged in: " + user.email;
+  } else {
+    display.innerText = "Not logged in";
+  }
+});
+
+/* LOGIN GUARD */
+function requireLogin(){
+  if(!currentUser){
+    document.getElementById("content").innerHTML = `
+      <div class="card">
+        <h1>Access Denied</h1>
+        <p>You must be logged in.</p>
+      </div>
+    `;
+    return false;
+  }
+  return true;
+}
+
+/* MAIN ROUTER */
+window.show = async function(page){
+
   const content = document.getElementById("content");
 
   if(page === "rules"){
@@ -157,15 +218,17 @@ function show(page){
         <p>
 Recent update!
 
-We have added a rules button, update logs, and we have added 2 different versions of tetris for beginners and more advanced users!
+We have added a rules button, update logs, and two versions of Tetris.
 
-I, Hunter, would also like to say that we are currently still working on trying to get Chat.Me able to happen. We have been talking to counselors, tech officials here at Genoa, and more. It is only a matter of talking to BC.
+Chat.Me is still in legacy development.
         </p>
       </div>
     `;
   }
 
   if(page === "tetris"){
+    if(!requireLogin()) return;
+
     content.innerHTML = `
       <div class="card">
         <h1>Tetris</h1>
@@ -180,35 +243,42 @@ I, Hunter, would also like to say that we are currently still working on trying 
     content.innerHTML = `
       <div class="card">
         <h1>Chat.Me</h1>
-        <p>
-          Chat.Me is a legacy project within the iHunter ecosystem.
-          It is currently inactive but preserved for reference.
-        </p>
-        <p class="muted">
-          Status: Legacy (Inactive)
-        </p>
+        <p>Legacy system. Not active.</p>
+        <p class="muted">Status: Archived</p>
       </div>
     `;
   }
 
   if(page === "profile"){
+    if(!requireLogin()) return;
+
+    const docRef = doc(db, "users", currentUser.uid);
+    const snap = await getDoc(docRef);
+
+    let username = snap.exists() ? snap.data().username : "Unknown";
+
     content.innerHTML = `
       <div class="card">
         <h1>Profile</h1>
-        <p class="muted">Firebase connection coming next step.</p>
+        <p><b>Username:</b> ${username}</p>
+        <p><b>Email:</b> ${currentUser.email}</p>
       </div>
     `;
   }
 
   if(page === "logout"){
+    await signOut(auth);
+    currentUser = null;
+
     content.innerHTML = `
       <div class="card">
-        <h1>Logout</h1>
-        <p class="muted">Logout will be connected to Firebase auth soon.</p>
+        <h1>Logged Out</h1>
+        <p>You have been logged out successfully.</p>
       </div>
     `;
   }
-}
+};
+
 </script>
 
 </body>
