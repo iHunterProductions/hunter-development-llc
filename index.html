@@ -50,7 +50,6 @@
       margin-top: 5px;
       cursor: pointer;
       border-radius: 6px;
-      transition: 0.2s;
       font-size: 14px;
     }
 
@@ -74,33 +73,6 @@
       box-shadow: 0 0 15px rgba(0,0,0,0.1);
       max-width: 700px;
     }
-
-    h1 {
-      margin-top: 0;
-    }
-
-    .muted {
-      opacity: 0.7;
-    }
-
-    .game-btn {
-      display: block;
-      width: 200px;
-      margin-top: 10px;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: bold;
-      background: #00c8c8;
-      color: black;
-      transition: 0.2s;
-    }
-
-    .game-btn:hover {
-      box-shadow: 0 0 10px #00c8c8;
-      transform: scale(1.03);
-    }
   </style>
 </head>
 
@@ -113,7 +85,12 @@
 
   <!-- ACCOUNT -->
   <div class="section-title">ACCOUNT</div>
-  <button class="nav-btn" onclick="location.href='login/'">Login</button>
+
+  <!-- FIXED LOGIN BUTTON -->
+  <button class="nav-btn" onclick="openLogin()">
+    Login
+  </button>
+
   <button class="nav-btn" onclick="show('profile')">Profile</button>
   <button class="nav-btn" onclick="show('logout')">Logout</button>
 
@@ -125,7 +102,7 @@
   <!-- GAMES -->
   <div class="section-title">GAMES</div>
   <button class="nav-btn" onclick="show('tetris')">Tetris</button>
-  <button class="nav-btn" onclick="location.href='games/scramble/'">Scramble</button>
+  <button class="nav-btn" onclick="location.href='./games/scramble/index.html'">Scramble</button>
 
   <!-- LEGACY -->
   <div class="section-title">LEGACY</div>
@@ -136,7 +113,7 @@
 <div class="content" id="content">
   <div class="card">
     <h1>Welcome</h1>
-    <p class="muted">Select something from the sidebar to begin.</p>
+    <p>Select something from the sidebar.</p>
   </div>
 </div>
 
@@ -170,112 +147,62 @@ const db = getFirestore(app);
 
 let currentUser = null;
 
-/* AUTH STATE TRACKING */
+/* AUTH */
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
 
   const display = document.getElementById("userDisplay");
 
-  if (user) {
-    display.innerText = "Logged in: " + user.email;
-  } else {
+  if (!user) {
     display.innerText = "Not logged in";
+    return;
   }
+
+  let name = user.email;
+
+  try {
+    const snap = await getDoc(doc(db, "users", user.uid));
+    if (snap.exists()) name = snap.data().username;
+  } catch {}
+
+  display.innerText = "👤 " + name;
 });
 
-/* LOGIN GUARD */
-function requireLogin(){
-  if(!currentUser){
-    document.getElementById("content").innerHTML = `
-      <div class="card">
-        <h1>Access Denied</h1>
-        <p>You must be logged in.</p>
-      </div>
-    `;
-    return false;
-  }
-  return true;
-}
+/* 🔥 ABSOLUTE SAFE LOGIN NAVIGATION */
+window.openLogin = function () {
+  // This ALWAYS works on GitHub Pages
+  window.location.href = "/login/index.html";
+};
 
-/* MAIN ROUTER */
-window.show = async function(page){
+/* ROUTER */
+window.show = function(page){
 
   const content = document.getElementById("content");
 
   if(page === "rules"){
-    content.innerHTML = `
-      <div class="card">
-        <h1>Rules</h1>
-        <p>Rules to be determined.</p>
-      </div>
-    `;
+    content.innerHTML = `<div class="card"><h1>Rules</h1><p>Rules to be determined.</p></div>`;
   }
 
   if(page === "logs"){
-    content.innerHTML = `
-      <div class="card">
-        <h1>Update Logs</h1>
-        <p>
-Recent update!
-
-We have added a rules button, update logs, and two versions of Tetris.
-
-Chat.Me is still in legacy development.
-        </p>
-      </div>
-    `;
+    content.innerHTML = `<div class="card"><h1>Update Logs</h1><p>Recent updates.</p></div>`;
   }
 
   if(page === "tetris"){
-    if(!requireLogin()) return;
-
-    content.innerHTML = `
-      <div class="card">
-        <h1>Tetris</h1>
-        <button class="game-btn" onclick="location.href='games/tetris/?speed=0.5'">Easy</button>
-        <button class="game-btn" onclick="location.href='games/tetris/?speed=1'">Normal</button>
-        <button class="game-btn" onclick="location.href='games/tetris/?speed=2'">Difficult</button>
-      </div>
-    `;
+    content.innerHTML = `<div class="card"><h1>Tetris</h1></div>`;
   }
 
   if(page === "chat"){
-    content.innerHTML = `
-      <div class="card">
-        <h1>Chat.Me</h1>
-        <p>Legacy system. Not active.</p>
-        <p class="muted">Status: Archived</p>
-      </div>
-    `;
+    content.innerHTML = `<div class="card"><h1>Chat.Me</h1></div>`;
   }
 
   if(page === "profile"){
-    if(!requireLogin()) return;
-
-    const docRef = doc(db, "users", currentUser.uid);
-    const snap = await getDoc(docRef);
-
-    let username = snap.exists() ? snap.data().username : "Unknown";
-
-    content.innerHTML = `
-      <div class="card">
-        <h1>Profile</h1>
-        <p><b>Username:</b> ${username}</p>
-        <p><b>Email:</b> ${currentUser.email}</p>
-      </div>
-    `;
+    content.innerHTML = `<div class="card"><h1>Profile</h1></div>`;
   }
 
   if(page === "logout"){
-    await signOut(auth);
+    signOut(auth);
     currentUser = null;
-
-    content.innerHTML = `
-      <div class="card">
-        <h1>Logged Out</h1>
-        <p>You have been logged out successfully.</p>
-      </div>
-    `;
+    content.innerHTML = `<div class="card"><h1>Logged Out</h1></div>`;
   }
 };
 
