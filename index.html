@@ -12,7 +12,6 @@
       overflow: hidden;
     }
 
-    /* LEFT SIDEBAR */
     .sidebar {
       width: 260px;
       background: #000;
@@ -55,7 +54,6 @@
       color: #00ffff;
     }
 
-    /* RIGHT CONTENT AREA (YIN-YANG LIGHT SIDE) */
     .content {
       flex: 1;
       background: #f5f5f5;
@@ -76,6 +74,10 @@
       margin-top: 0;
     }
 
+    .muted {
+      opacity: 0.7;
+    }
+
     .game-btn {
       display: block;
       width: 200px;
@@ -94,16 +96,11 @@
       box-shadow: 0 0 10px #00c8c8;
       transform: scale(1.03);
     }
-
-    .muted {
-      opacity: 0.7;
-    }
   </style>
 </head>
 
 <body>
 
-<!-- SIDEBAR -->
 <div class="sidebar">
   <div class="logo">☯ iHunter Game Hub</div>
 
@@ -115,11 +112,10 @@
   <button class="nav-btn" onclick="show('tetris')">Tetris</button>
   <button class="nav-btn" onclick="location.href='games/scramble/'">Scramble</button>
 
-  <div class="section-title">FUTURE</div>
+  <div class="section-title">LEGACY</div>
   <button class="nav-btn" onclick="show('chat')">Chat.Me</button>
 </div>
 
-<!-- CONTENT -->
 <div class="content" id="content">
   <div class="card">
     <h1>Welcome</h1>
@@ -170,7 +166,12 @@ I, Hunter, would also like to say that we are currently still working on trying 
     content.innerHTML = `
       <div class="card">
         <h1>Chat.Me</h1>
-        <p class="muted">Currently in development.</p>
+        <p>
+          Chat.Me is a legacy project within the iHunter ecosystem. It represents earlier development stages of our communication system and is currently not active.
+        </p>
+        <p class="muted">
+          Status: Legacy (Inactive)
+        </p>
       </div>
     `;
   }
