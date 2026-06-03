@@ -38,7 +38,6 @@
       margin-top: 15px;
       font-size: 12px;
       opacity: 0.6;
-      letter-spacing: 1px;
     }
 
     .nav-btn {
@@ -61,7 +60,6 @@
     .content {
       flex: 1;
       background: #f5f5f5;
-      color: #111;
       padding: 40px;
       overflow-y: auto;
     }
@@ -83,28 +81,24 @@
   <div class="logo">☯ iHunter Game Hub</div>
   <div id="userDisplay">Not logged in</div>
 
-  <!-- ACCOUNT -->
   <div class="section-title">ACCOUNT</div>
 
-  <!-- FIXED LOGIN BUTTON -->
-  <button class="nav-btn" onclick="openLogin()">
+  <!-- SAFE LOGIN BUTTON -->
+  <button class="nav-btn" onclick="go('login/index.html')">
     Login
   </button>
 
   <button class="nav-btn" onclick="show('profile')">Profile</button>
   <button class="nav-btn" onclick="show('logout')">Logout</button>
 
-  <!-- INFO -->
   <div class="section-title">INFO</div>
   <button class="nav-btn" onclick="show('rules')">Rules</button>
   <button class="nav-btn" onclick="show('logs')">Update Logs</button>
 
-  <!-- GAMES -->
   <div class="section-title">GAMES</div>
   <button class="nav-btn" onclick="show('tetris')">Tetris</button>
-  <button class="nav-btn" onclick="location.href='./games/scramble/index.html'">Scramble</button>
+  <button class="nav-btn" onclick="go('games/scramble/index.html')">Scramble</button>
 
-  <!-- LEGACY -->
   <div class="section-title">LEGACY</div>
   <button class="nav-btn" onclick="show('chat')">Chat.Me</button>
 
@@ -168,10 +162,10 @@ onAuthStateChanged(auth, async (user) => {
   display.innerText = "👤 " + name;
 });
 
-/* 🔥 ABSOLUTE SAFE LOGIN NAVIGATION */
-window.openLogin = function () {
-  // This ALWAYS works on GitHub Pages
-  window.location.href = "/login/index.html";
+/* 🔥 FIXED NAVIGATION (GITHUB SAFE) */
+window.go = function(path){
+  // ALWAYS stays inside your repo
+  window.location.href = path;
 };
 
 /* ROUTER */
