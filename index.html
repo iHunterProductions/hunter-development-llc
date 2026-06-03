@@ -38,6 +38,7 @@
       margin-top: 15px;
       font-size: 12px;
       opacity: 0.6;
+      letter-spacing: 1px;
     }
 
     .nav-btn {
@@ -49,6 +50,7 @@
       margin-top: 5px;
       cursor: pointer;
       border-radius: 6px;
+      transition: 0.2s;
       font-size: 14px;
     }
 
@@ -60,6 +62,7 @@
     .content {
       flex: 1;
       background: #f5f5f5;
+      color: #111;
       padding: 40px;
       overflow-y: auto;
     }
@@ -71,6 +74,33 @@
       box-shadow: 0 0 15px rgba(0,0,0,0.1);
       max-width: 700px;
     }
+
+    h1 {
+      margin-top: 0;
+    }
+
+    .muted {
+      opacity: 0.7;
+    }
+
+    .game-btn {
+      display: block;
+      width: 200px;
+      margin-top: 10px;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      background: #00c8c8;
+      color: black;
+      transition: 0.2s;
+    }
+
+    .game-btn:hover {
+      box-shadow: 0 0 10px #00c8c8;
+      transform: scale(1.03);
+    }
   </style>
 </head>
 
@@ -81,24 +111,23 @@
   <div class="logo">☯ iHunter Game Hub</div>
   <div id="userDisplay">Not logged in</div>
 
+  <!-- ACCOUNT -->
   <div class="section-title">ACCOUNT</div>
-
-  <!-- SAFE LOGIN BUTTON -->
-  <button class="nav-btn" onclick="go('login/index.html')">
-    Login
-  </button>
-
+  <button class="nav-btn" onclick="location.href='login/'">Login</button>
   <button class="nav-btn" onclick="show('profile')">Profile</button>
   <button class="nav-btn" onclick="show('logout')">Logout</button>
 
+  <!-- INFO -->
   <div class="section-title">INFO</div>
   <button class="nav-btn" onclick="show('rules')">Rules</button>
   <button class="nav-btn" onclick="show('logs')">Update Logs</button>
 
+  <!-- GAMES -->
   <div class="section-title">GAMES</div>
   <button class="nav-btn" onclick="show('tetris')">Tetris</button>
-  <button class="nav-btn" onclick="go('games/scramble/index.html')">Scramble</button>
+  <button class="nav-btn" onclick="location.href='games/scramble/'">Scramble</button>
 
+  <!-- LEGACY -->
   <div class="section-title">LEGACY</div>
   <button class="nav-btn" onclick="show('chat')">Chat.Me</button>
 
@@ -107,7 +136,7 @@
 <div class="content" id="content">
   <div class="card">
     <h1>Welcome</h1>
-    <p>Select something from the sidebar.</p>
+    <p class="muted">Select something from the sidebar to begin.</p>
   </div>
 </div>
 
@@ -141,62 +170,112 @@ const db = getFirestore(app);
 
 let currentUser = null;
 
-/* AUTH */
+/* AUTH STATE TRACKING */
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
 
   const display = document.getElementById("userDisplay");
 
-  if (!user) {
+  if (user) {
+    display.innerText = "Logged in: " + user.email;
+  } else {
     display.innerText = "Not logged in";
-    return;
   }
-
-  let name = user.email;
-
-  try {
-    const snap = await getDoc(doc(db, "users", user.uid));
-    if (snap.exists()) name = snap.data().username;
-  } catch {}
-
-  display.innerText = "👤 " + name;
 });
 
-/* 🔥 FIXED NAVIGATION (GITHUB SAFE) */
-window.go = function(path){
-  // ALWAYS stays inside your repo
-  window.location.href = path;
-};
+/* LOGIN GUARD */
+function requireLogin(){
+  if(!currentUser){
+    document.getElementById("content").innerHTML = `
+      <div class="card">
+        <h1>Access Denied</h1>
+        <p>You must be logged in.</p>
+      </div>
+    `;
+    return false;
+  }
+  return true;
+}
 
-/* ROUTER */
-window.show = function(page){
+/* MAIN ROUTER */
+window.show = async function(page){
 
   const content = document.getElementById("content");
 
   if(page === "rules"){
-    content.innerHTML = `<div class="card"><h1>Rules</h1><p>Rules to be determined.</p></div>`;
+    content.innerHTML = `
+      <div class="card">
+        <h1>Rules</h1>
+        <p>Rules to be determined.</p>
+      </div>
+    `;
   }
 
   if(page === "logs"){
-    content.innerHTML = `<div class="card"><h1>Update Logs</h1><p>Recent updates.</p></div>`;
+    content.innerHTML = `
+      <div class="card">
+        <h1>Update Logs</h1>
+        <p>
+Recent update!
+
+We have added a rules button, update logs, and two versions of Tetris.
+
+Chat.Me is still in legacy development.
+        </p>
+      </div>
+    `;
   }
 
   if(page === "tetris"){
-    content.innerHTML = `<div class="card"><h1>Tetris</h1></div>`;
+    if(!requireLogin()) return;
+
+    content.innerHTML = `
+      <div class="card">
+        <h1>Tetris</h1>
+        <button class="game-btn" onclick="location.href='games/tetris/?speed=0.5'">Easy</button>
+        <button class="game-btn" onclick="location.href='games/tetris/?speed=1'">Normal</button>
+        <button class="game-btn" onclick="location.href='games/tetris/?speed=2'">Difficult</button>
+      </div>
+    `;
   }
 
   if(page === "chat"){
-    content.innerHTML = `<div class="card"><h1>Chat.Me</h1></div>`;
+    content.innerHTML = `
+      <div class="card">
+        <h1>Chat.Me</h1>
+        <p>Legacy system. Not active.</p>
+        <p class="muted">Status: Archived</p>
+      </div>
+    `;
   }
 
   if(page === "profile"){
-    content.innerHTML = `<div class="card"><h1>Profile</h1></div>`;
+    if(!requireLogin()) return;
+
+    const docRef = doc(db, "users", currentUser.uid);
+    const snap = await getDoc(docRef);
+
+    let username = snap.exists() ? snap.data().username : "Unknown";
+
+    content.innerHTML = `
+      <div class="card">
+        <h1>Profile</h1>
+        <p><b>Username:</b> ${username}</p>
+        <p><b>Email:</b> ${currentUser.email}</p>
+      </div>
+    `;
   }
 
   if(page === "logout"){
-    signOut(auth);
+    await signOut(auth);
     currentUser = null;
-    content.innerHTML = `<div class="card"><h1>Logged Out</h1></div>`;
+
+    content.innerHTML = `
+      <div class="card">
+        <h1>Logged Out</h1>
+        <p>You have been logged out successfully.</p>
+      </div>
+    `;
   }
 };
 
