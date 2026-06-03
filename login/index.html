@@ -5,12 +5,23 @@
 </head>
 <body>
 
-<h1>Login</h1>
-<p>Firebase is connected.</p>
+<h2>Login</h2>
+
+<input id="email" placeholder="Email"><br><br>
+<input id="password" type="password" placeholder="Password"><br><br>
+
+<button onclick="signUp()">Sign Up</button>
+<button onclick="logIn()">Log In</button>
+
+<p id="status"></p>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-analytics.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAHgQJtwtBZ2C_5R_BJDa0rTSogX-zMG_8",
@@ -18,14 +29,43 @@ const firebaseConfig = {
   projectId: "ihunter-game-hub",
   storageBucket: "ihunter-game-hub.firebasestorage.app",
   messagingSenderId: "174875617061",
-  appId: "1:174875617061:web:c1d0e8eeba5a62a33e9ccc",
-  measurementId: "G-4LMR26XY7Z"
+  appId: "1:174875617061:web:c1d0e8eeba5a62a33e9ccc"
 };
 
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+const auth = getAuth(app);
 
-console.log("Firebase connected!");
+window.signUp = async function() {
+  const email = emailInput().value;
+  const password = passInput().value;
+
+  try {
+    await createUserWithEmailAndPassword(auth, email, password);
+    document.getElementById("status").innerText = "Account created!";
+  } catch (err) {
+    document.getElementById("status").innerText = err.message;
+  }
+}
+
+window.logIn = async function() {
+  const email = emailInput().value;
+  const password = passInput().value;
+
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    document.getElementById("status").innerText = "Logged in!";
+  } catch (err) {
+    document.getElementById("status").innerText = err.message;
+  }
+}
+
+function emailInput(){
+  return document.getElementById("email");
+}
+
+function passInput(){
+  return document.getElementById("password");
+}
 </script>
 
 </body>
